@@ -240,11 +240,34 @@ export function generateDiagnosticPDF({ name, capacityRatings, results, recommen
 
 /**
  * Generate and download the PDF.
+ * Uses blob download as primary strategy since jsPDF doc.save() can fail silently.
  */
 export function downloadDiagnosticPDF(params) {
   const doc = generateDiagnosticPDF(params);
   const filename = params.name
     ? `Execution-Diagnostic-${params.name.replace(/\s+/g, '-')}.pdf`
     : 'Execution-Diagnostic-Report.pdf';
-  doc.save(filename);
+
+  try {
+    // Primary: Manual blob download (most reliable across browsers)
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 250);
+  } catch (e) {
+    console.warn('Blob download failed, opening in new tab:', e);
+    try {
+      // Fallback: Open as data URI in new tab
+      const dataUri = doc.output('datauristring');
+      window.open(dataUri, '_blank');
+    } catch (e2) {
+      // Last resort: use jsPDF built-in
+      doc.save(filename);
+    }
+  }
 }

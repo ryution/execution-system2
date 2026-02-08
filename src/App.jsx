@@ -259,18 +259,23 @@ function PlaybookModal() {
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-neutral-900 rounded-xl flex items-center justify-center mx-auto mb-4"><BookOpen className="w-7 h-7 text-amber-400" /></div>
           <h3 className="text-xl font-bold text-neutral-900" style={{ fontFamily: serif }}>The Execution Playbook</h3>
-          <p className="text-neutral-500 text-sm mt-1" style={{ fontFamily: sans }}>Chapter One — free, no obligation</p>
+          <p className="text-neutral-500 text-sm mt-1" style={{ fontFamily: sans }}>Chapters One & Two — free, no obligation</p>
         </div>
         {playbookSubmitted ? (
           <div className="text-center py-4">
             <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"><Check className="w-6 h-6 text-emerald-600" /></div>
-            <p className="text-neutral-900 font-semibold mb-1" style={{ fontFamily: sans }}>Check your inbox</p>
-            <p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>Chapter One is on its way to {playbookEmail}</p>
+            <p className="text-neutral-900 font-semibold mb-3" style={{ fontFamily: sans }}>Your playbook is ready</p>
+            <a href="/Execution-Playbook.pdf" download="Execution-Playbook.pdf"
+              className="inline-flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-neutral-800 transition-colors text-sm"
+              style={{ fontFamily: sans }}>
+              <Download className="w-4 h-4" /> Download PDF
+            </a>
+            <p className="text-neutral-400 text-xs mt-3" style={{ fontFamily: sans }}>A copy has also been sent to {playbookEmail}</p>
           </div>
         ) : (
           <>
             <p className="text-neutral-600 text-sm leading-relaxed mb-6 text-center" style={{ fontFamily: sans }}>
-              Why motivation fails. Why planners don't stick. How the three-lever model works. Get the intellectual foundation of the Execution System.
+              Why motivation fails. Why planners don't stick. How the three-lever model works — plus the three habits that carry the entire system. Enter your email to download instantly.
             </p>
             <input type="email" placeholder="Your email address" value={playbookEmail} onChange={e => setPlaybookEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handlePlaybookSubmit()}
@@ -278,7 +283,7 @@ function PlaybookModal() {
             <button onClick={handlePlaybookSubmit} disabled={playbookSubmitting || !playbookEmail.includes('@')}
               className="w-full bg-neutral-900 text-white py-3 rounded-lg font-medium hover:bg-neutral-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{ fontFamily: sans }}>
-              {playbookSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : 'Send Me Chapter One →'}
+              {playbookSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Preparing...</> : <><Download className="w-4 h-4" /> Get the Playbook →</>}
             </button>
             <p className="text-xs text-neutral-400 text-center mt-3" style={{ fontFamily: sans }}>No spam. Unsubscribe anytime.</p>
           </>
@@ -471,7 +476,7 @@ function LandingPage() {
                   <div key={i} className="flex items-center gap-3"><Check className="w-4 h-4 text-neutral-400 flex-shrink-0" /><span className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{item}</span></div>
                 ))}
               </div>
-              <button onClick={() => setShowPlaybookModal(true)} className="bg-neutral-900 text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-neutral-800 transition-colors" style={{ fontFamily: sans }}>Get Chapter One Free →</button>
+              <button onClick={() => setShowPlaybookModal(true)} className="bg-neutral-900 text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-neutral-800 transition-colors" style={{ fontFamily: sans }}>Get the Free Playbook →</button>
               <p className="text-neutral-400 text-xs mt-3" style={{ fontFamily: sans }}>The full Playbook is included with every Tier 2 enrollment.</p>
             </div>
             <div className="md:col-span-2 flex justify-center">
