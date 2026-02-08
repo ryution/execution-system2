@@ -60,11 +60,8 @@ export async function submitPlaybookEmail(email) {
  * @param {string} params.recommendation - 'full_system' or 'coach_only'
  * @param {Array} params.weakestCapacities - names of weakest capacities
  * @param {Array} params.missingLevers - which levers are missing
- * @param {string} [params.fillingFor] - 'self' or 'child'
- * @param {string} [params.parentEmail] - parent email if filling for child
- * @param {string} [params.studentName] - student name if filling for child
  */
-export async function submitDiagnosticResults({ name, email, capacityRatings, recommendation, weakestCapacities, missingLevers, fillingFor, parentEmail, studentName }) {
+export async function submitDiagnosticResults({ name, email, capacityRatings, recommendation, weakestCapacities, missingLevers }) {
   return submitToSheets('diagnostic', {
     name,
     email,
@@ -72,29 +69,5 @@ export async function submitDiagnosticResults({ name, email, capacityRatings, re
     recommendation,
     weakestCapacities: weakestCapacities.join(', '),
     missingLevers: missingLevers.join(', '),
-    fillingFor: fillingFor || 'self',
-    parentEmail: parentEmail || '',
-    studentName: studentName || '',
   });
-}
-
-/**
- * Submit an email to Mailchimp via the /api/subscribe serverless function.
- * @param {object} params
- * @param {string} params.email
- * @param {string} [params.name]
- * @param {string} params.type - 'playbook' or 'diagnostic'
- */
-export async function submitToMailchimp({ email, name, type }) {
-  try {
-    const response = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name: name || '', type }),
-    });
-    return response.ok;
-  } catch (error) {
-    console.error('[Mailchimp] Submission failed:', error);
-    return false;
-  }
 }

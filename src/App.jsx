@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, Check, AlertCircle, Target, Calendar, Users, Brain, Clock, Zap, Shield, BarChart3, Sparkles, ArrowRight, BookOpen, ShieldCheck, ChevronDown, X, Download, Loader2 } from 'lucide-react';
 import { CONFIG } from './config.js';
-import { submitPlaybookEmail, submitDiagnosticResults, submitToMailchimp } from './utils/sheets.js';
+import { submitPlaybookEmail, submitDiagnosticResults } from './utils/sheets.js';
 import { downloadDiagnosticPDF } from './utils/pdf.js';
 
 // ─── DATA ──────────────────────────────────────────────────────
@@ -40,160 +40,17 @@ const efClusters = [
 ];
 
 const interventions = {
-  response_inhibition: {
-    training: [
-      { id: "ri_implementation", text: "I have a pre-decided plan for impulse moments — 'When I feel the urge to X, I will do Y instead'" },
-      { id: "ri_mindfulness", text: "I practice deliberate pausing — noticing an urge before acting on it" }
-    ],
-    environment: [
-      { id: "ri_sleep", text: "I get consistent sleep (7–9 hours, same wake time daily)" },
-      { id: "ri_friction", text: "I've made temptations harder to reach — apps deleted, phone in another room, distractions physically removed" }
-    ],
-    accountability: [
-      { id: "ri_blocker", text: "Someone else manages my screen time limits or app restrictions" },
-      { id: "ri_body_double", text: "I work with other people in the room so I'm less likely to go off track" }
-    ]
-  },
-  emotional_regulation: {
-    training: [
-      { id: "er_reappraisal", text: "I reframe stressful situations before reacting — asking 'what else could this mean?' rather than going with my first emotional read" },
-      { id: "er_labeling", text: "I name my emotions precisely — 'frustrated' or 'overwhelmed,' not just 'stressed'" }
-    ],
-    environment: [
-      { id: "er_sleep", text: "I get consistent sleep (7–9 hours, same wake time daily)" },
-      { id: "er_exercise", text: "I exercise at least 3 times per week" }
-    ],
-    accountability: [
-      { id: "er_checkin", text: "I have regular check-ins with someone I trust about how I'm doing emotionally" },
-      { id: "er_therapist", text: "I work with a therapist or counselor" }
-    ]
-  },
-  sustained_attention: {
-    training: [
-      { id: "sa_meditation", text: "I practice focused-attention meditation — even 10 minutes a day trains the ability to hold focus" },
-      { id: "sa_pomodoro", text: "I work in timed blocks with scheduled breaks (e.g., 25 or 50 minutes on, then rest)" }
-    ],
-    environment: [
-      { id: "sa_one_tab", text: "During focused work, I limit myself to one tab, one app, one task at a time" },
-      { id: "sa_nature", text: "I take 20-minute breaks outdoors or in green space — nature restores the ability to concentrate" }
-    ],
-    accountability: [
-      { id: "sa_body_double", text: "I work alongside other people (library, study partner, co-working) to stay on task" },
-      { id: "sa_timer", text: "I use a visible timer and tell someone how many focused blocks I completed" }
-    ]
-  },
-  task_initiation: {
-    training: [
-      { id: "ti_implementation", text: "I pre-commit to exactly when and where I'll start — 'At 9am at my desk, I will open the document'" },
-      { id: "ti_temptation_bundle", text: "I pair dreaded tasks with something I enjoy — a favorite playlist, a good drink, a comfortable spot" }
-    ],
-    environment: [
-      { id: "ti_activation", text: "I make starting as easy as possible — materials already out, browser tab already open, zero setup needed" },
-      { id: "ti_trigger", text: "I have a consistent start ritual — same place, same time, same first action" }
-    ],
-    accountability: [
-      { id: "ti_start_time", text: "I tell someone else exactly when I'm going to start, and they expect to hear from me" },
-      { id: "ti_daily_call", text: "I have a daily planning call or check-in that creates a real start time" }
-    ]
-  },
-  goal_persistence: {
-    training: [
-      { id: "gp_woop", text: "I picture the outcome I want, then immediately picture what's most likely to get in the way — this combination works better than positive thinking alone" },
-      { id: "gp_process", text: "I set goals around actions I control ('write for 30 minutes') rather than outcomes I can't ('get an A')" }
-    ],
-    environment: [
-      { id: "gp_visible", text: "I track progress somewhere visible — a streak chart, a whiteboard, a checklist I can see daily" },
-      { id: "gp_milestones", text: "I've broken big goals into smaller milestones with their own deadlines" }
-    ],
-    accountability: [
-      { id: "gp_commitment", text: "I've made a commitment with real stakes — someone who follows up, a public promise, something I'd lose" },
-      { id: "gp_coach", text: "I check in regularly with someone who asks what I committed to and whether I did it" }
-    ]
-  },
-  planning: {
-    training: [
-      { id: "pl_premortem", text: "Before starting a plan, I ask: 'Imagine this has already failed — what went wrong?' This catches blind spots normal planning misses" },
-      { id: "pl_multiplier", text: "I multiply my first time estimate by 1.5–2x — people almost always underestimate how long things take" }
-    ],
-    environment: [
-      { id: "pl_calendar", text: "I use a calendar with time-blocks, not just a to-do list — tasks get a specific slot or they don't happen" },
-      { id: "pl_daily", text: "I spend 5–10 minutes each morning reviewing what's ahead and deciding what matters most today" }
-    ],
-    accountability: [
-      { id: "pl_review", text: "Someone reviews my plans with me — not just what I intend to do, but whether the time math works" },
-      { id: "pl_weekly", text: "I do a weekly review with another person: what got done, what didn't, what to adjust" }
-    ]
-  },
-  organization: {
-    training: [
-      { id: "or_reset", text: "I do an end-of-day reset: clear the desk, process the inbox, close open loops" },
-      { id: "or_one_touch", text: "I handle things once — decide on the spot rather than moving them to a different pile" }
-    ],
-    environment: [
-      { id: "or_single_inbox", text: "I have one single place where all new tasks, ideas, and info get captured" },
-      { id: "or_taxonomy", text: "I have a filing system I actually use — consistent folders, consistent names" }
-    ],
-    accountability: [
-      { id: "or_audit", text: "Someone periodically looks at my systems with me and helps me clean them up" },
-      { id: "or_checkin", text: "I report on whether my systems are actually being maintained, not just whether they exist" }
-    ]
-  },
-  time_awareness: {
-    training: [
-      { id: "ta_estimate", text: "Before starting a task, I guess how long it will take — then I time it and compare. This calibrates my internal clock" },
-      { id: "ta_track", text: "I track where my time actually goes each day, even roughly — most people are shocked by the gap between perception and reality" }
-    ],
-    environment: [
-      { id: "ta_visible_time", text: "I keep visible clocks and timers in my workspace so time doesn't become invisible" },
-      { id: "ta_buffer", text: "I schedule buffer time between commitments rather than stacking everything back-to-back" }
-    ],
-    accountability: [
-      { id: "ta_shared_cal", text: "I share my calendar with someone who can see how packed it actually is" },
-      { id: "ta_deadline", text: "I tell someone else my deadlines and time estimates so I can't quietly ignore them" }
-    ]
-  },
-  working_memory: {
-    training: [
-      { id: "wm_external", text: "I write things down immediately — if it's in my head, it's at risk. If it's on paper, it's safe" },
-      { id: "wm_chunking", text: "I group related information into clusters rather than trying to remember individual pieces" }
-    ],
-    environment: [
-      { id: "wm_singletask", text: "I keep only one task visible at a time — one app, one document, one thing" },
-      { id: "wm_whiteboard", text: "I use a whiteboard or visible dashboard so active priorities aren't buried in my head" }
-    ],
-    accountability: [
-      { id: "wm_retrieval", text: "I test myself on what I'm supposed to remember rather than just re-reading it — recall beats review" },
-      { id: "wm_checkin", text: "I regularly talk through what's on my plate with someone, so nothing slips through the cracks" }
-    ]
-  },
-  cognitive_flexibility: {
-    training: [
-      { id: "cf_interleave", text: "I mix up types of practice rather than grinding one thing — alternating between different problems builds adaptability" },
-      { id: "cf_opposite", text: "I argue the opposite side of my own position before committing to it" }
-    ],
-    environment: [
-      { id: "cf_rotate", text: "I change my setting or approach periodically — same routine too long creates rigidity" },
-      { id: "cf_novelty", text: "I deliberately seek out unfamiliar perspectives — new people, different fields, methods I haven't tried" }
-    ],
-    accountability: [
-      { id: "cf_cross", text: "I get feedback from people outside my usual world" },
-      { id: "cf_challenge", text: "I have someone who will push back on my thinking, not just agree with me" }
-    ]
-  },
-  metacognition: {
-    training: [
-      { id: "mc_calibration", text: "Before a task, I predict how I'll do — then I compare the prediction to what actually happened. This builds self-awareness fast" },
-      { id: "mc_reflection", text: "I do a brief daily review: what worked, what didn't, what I'd do differently" }
-    ],
-    environment: [
-      { id: "mc_journal", text: "I use a structured template for reflection — not freeform journaling, but specific prompts that force honest answers" },
-      { id: "mc_data", text: "I keep a simple log of what I committed to vs. what I completed — the pattern tells me more than any single day" }
-    ],
-    accountability: [
-      { id: "mc_debrief", text: "I debrief regularly with someone who asks hard questions about my process, not just my results" },
-      { id: "mc_feedback", text: "I ask people who will be honest to tell me what I'm not seeing about myself" }
-    ]
-  }
+  response_inhibition: { training: [{ id: "ri_mindfulness", text: "I practice mindfulness or breathing exercises regularly" }, { id: "ri_urge_surfing", text: "I use urge-surfing (waiting 60 seconds before acting on impulses)" }], environment: [{ id: "ri_notifications", text: "I've turned off non-essential notifications" }, { id: "ri_friction", text: "I've added friction to temptations (apps removed, snacks hidden, etc.)" }], accountability: [{ id: "ri_blocker", text: "Someone else controls my app blockers or screen time" }, { id: "ri_body_double", text: "I work with others present (body doubling, Focusmate)" }] },
+  emotional_regulation: { training: [{ id: "er_journaling", text: "I journal about difficult emotions when they arise" }, { id: "er_labeling", text: "I practice naming specific emotions (not just 'bad' or 'stressed')" }], environment: [{ id: "er_sleep", text: "I maintain consistent sleep (7-9 hours, fixed wake time)" }, { id: "er_exercise", text: "I exercise at least 3x per week" }], accountability: [{ id: "er_checkin", text: "I have regular emotional check-ins with someone I trust" }, { id: "er_therapist", text: "I work with a therapist or counselor" }] },
+  sustained_attention: { training: [{ id: "sa_pomodoro", text: "I use timed work blocks (Pomodoro, 52-17, etc.)" }, { id: "sa_microreview", text: "I do brief check-ins during work to catch drift" }], environment: [{ id: "sa_one_tab", text: "I use a single-tab browser or distraction blocker" }, { id: "sa_workspace", text: "I have a dedicated, distraction-free workspace" }], accountability: [{ id: "sa_focusmate", text: "I use Focusmate or work with a focus partner" }, { id: "sa_timer", text: "I share a visible timer with someone during work sessions" }] },
+  task_initiation: { training: [{ id: "ti_two_minute", text: "I use the two-minute rule (just start for 2 minutes)" }, { id: "ti_visualize", text: "I visualize the first physical motion before starting" }], environment: [{ id: "ti_prep", text: "I prepare materials the night before" }, { id: "ti_trigger", text: "I have a consistent start trigger (playlist, location, ritual)" }], accountability: [{ id: "ti_start_time", text: "I commit to specific start times with another person" }, { id: "ti_daily_call", text: "I have daily planning calls or check-ins" }] },
+  goal_persistence: { training: [{ id: "gp_process", text: "I set process goals, not just outcome goals" }, { id: "gp_why", text: "I regularly reconnect with WHY my goals matter" }], environment: [{ id: "gp_visible", text: "I have visible progress tracking (streaks, charts, boards)" }, { id: "gp_milestones", text: "I've broken big goals into clear milestones" }], accountability: [{ id: "gp_public", text: "I've made public commitments about my goals" }, { id: "gp_coach", text: "I check in regularly with a coach or accountability partner" }] },
+  planning: { training: [{ id: "pl_daily", text: "I do daily planning (time-blocking my calendar)" }, { id: "pl_weekly", text: "I do weekly reviews and planning sessions" }], environment: [{ id: "pl_calendar", text: "I use a calendar as my source of truth (not just to-do lists)" }, { id: "pl_eisenhower", text: "I use a prioritization system (Eisenhower matrix, etc.)" }], accountability: [{ id: "pl_review", text: "Someone reviews my plans with me" }, { id: "pl_witness", text: "I plan with another person present" }] },
+  organization: { training: [{ id: "or_reset", text: "I do end-of-day resets (clearing desk, processing inbox)" }, { id: "or_one_touch", text: "I practice one-touch rule (handle things once)" }], environment: [{ id: "or_single_inbox", text: "I have a single capture point for new tasks/info" }, { id: "or_taxonomy", text: "I have consistent folder/filing systems" }], accountability: [{ id: "or_photo", text: "I share workspace photos for accountability" }, { id: "or_audit", text: "Someone audits my systems with me periodically" }] },
+  time_awareness: { training: [{ id: "ta_estimate", text: "I estimate task duration, then track actual time to calibrate" }, { id: "ta_body", text: "I notice body-based time cues (fatigue, hunger)" }], environment: [{ id: "ta_visible_time", text: "I use visible timers and analog clocks" }, { id: "ta_buffer", text: "I schedule buffer blocks between appointments" }], accountability: [{ id: "ta_shared_cal", text: "I share my calendar with someone who can see my load" }, { id: "ta_deadline", text: "I report deadlines to an accountability partner" }] },
+  working_memory: { training: [{ id: "wm_external", text: "I externalize immediately (write everything down)" }, { id: "wm_teach", text: "I teach material aloud to strengthen retention" }], environment: [{ id: "wm_whiteboard", text: "I use whiteboards or visible dashboards" }, { id: "wm_spaced", text: "I use spaced repetition tools" }], accountability: [{ id: "wm_retrieval", text: "I practice retrieval with a partner" }, { id: "wm_progress", text: "I share progress boards with others" }] },
+  cognitive_flexibility: { training: [{ id: "cf_opposite", text: "I practice arguing the opposite view" }, { id: "cf_reappraise", text: "I reframe situations multiple ways" }], environment: [{ id: "cf_rotate", text: "I rotate work settings or tools periodically" }, { id: "cf_novelty", text: "I build in novelty and variety" }], accountability: [{ id: "cf_cross", text: "I get feedback from people outside my domain" }, { id: "cf_peer", text: "I have peers who challenge my assumptions" }] },
+  metacognition: { training: [{ id: "mc_reflection", text: "I do daily reflection (what worked, what didn't, lesson)" }, { id: "mc_aar", text: "I do after-action reviews on projects" }], environment: [{ id: "mc_journal", text: "I use structured journaling templates" }, { id: "mc_ai", text: "I use AI to help process thoughts and patterns" }], accountability: [{ id: "mc_debrief", text: "I have regular debriefs with a peer or coach" }, { id: "mc_feedback", text: "I actively seek feedback on my blind spots" }] }
 };
 
 const capacityIcons = {
@@ -247,9 +104,6 @@ export default function App() {
   const [openFaq, setOpenFaq] = useState(null);
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
   const [pdfDownloaded, setPdfDownloaded] = useState(false);
-  const [fillingFor, setFillingFor] = useState(null); // null = not chosen, 'self' or 'child'
-  const [parentEmail, setParentEmail] = useState('');
-  const [studentName, setStudentName] = useState('');
 
   const allCapacities = efClusters.flatMap(c => c.capacities);
 
@@ -283,10 +137,7 @@ export default function App() {
   const handlePlaybookSubmit = async () => {
     if (!playbookEmail || !playbookEmail.includes('@')) return;
     setPlaybookSubmitting(true);
-    await Promise.all([
-      submitPlaybookEmail(playbookEmail),
-      submitToMailchimp({ email: playbookEmail, type: 'playbook' }),
-    ]);
+    await submitPlaybookEmail(playbookEmail);
     setPlaybookSubmitting(false);
     setPlaybookSubmitted(true);
   };
@@ -294,33 +145,23 @@ export default function App() {
   // ─── Results submission + PDF ────────────────────────────────
   const handleViewResults = async () => {
     setCurrentView('results');
+    // Submit to sheets in background
     const results = calculateResults();
-    const contactEmail = fillingFor === 'child' ? parentEmail : email;
-    const contactName = fillingFor === 'child' ? name : name; // parent name or self name
-    if (contactEmail) {
-      Promise.all([
-        submitDiagnosticResults({
-          name: fillingFor === 'child' ? studentName : name,
-          email: contactEmail,
-          capacityRatings,
-          recommendation: results.recommendation,
-          weakestCapacities: results.weakest.map(r => r.capacity.name),
-          missingLevers: results.weakest.map(r => r.missingLever),
-          fillingFor: fillingFor || 'self',
-          parentEmail: fillingFor === 'child' ? parentEmail : '',
-          studentName: fillingFor === 'child' ? studentName : '',
-        }),
-        submitToMailchimp({ email: contactEmail, name: contactName, type: 'diagnostic' }),
-      ]);
+    if (email) {
+      submitDiagnosticResults({
+        name, email, capacityRatings,
+        recommendation: results.recommendation,
+        weakestCapacities: results.weakest.map(r => r.capacity.name),
+        missingLevers: results.weakest.map(r => r.missingLever),
+      });
       setResultsSubmitted(true);
     }
   };
 
   const handleDownloadPDF = () => {
     const results = calculateResults();
-    const reportName = fillingFor === 'child' ? studentName : name;
     downloadDiagnosticPDF({
-      name: reportName, capacityRatings,
+      name, capacityRatings,
       results: results.weakest,
       recommendation: results.recommendation,
       allCapacities,
@@ -680,54 +521,16 @@ export default function App() {
   // ═══════════════════════════════════════════════════════════════
   const Diagnostic = () => {
     const weakest = getWeakestCapacities();
-    const isParentProxy = fillingFor === 'child';
-
-    // ── Who-is-filling-this-out gate ──
-    if (!fillingFor) {
-      return (
-        <div className="min-h-screen bg-neutral-50">
-          <div className="bg-neutral-950 text-white py-6 border-b border-neutral-800">
-            <div className="max-w-3xl mx-auto px-6">
-              <div className="flex items-center justify-between mb-4">
-                <button onClick={() => setCurrentView('landing')} className="text-neutral-500 hover:text-white flex items-center gap-2 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4" /> Back</button>
-                <div className="flex items-center gap-3"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Diagnostic</span></div>
-              </div>
-              <h1 className="text-2xl font-bold" style={{ fontFamily: serif }}>Executive Function Diagnostic</h1>
-              <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Before we begin</p>
-            </div>
-          </div>
-          <div className="max-w-3xl mx-auto px-6 py-12">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-neutral-900 mb-3" style={{ fontFamily: serif }}>Who is taking this diagnostic?</h2>
-              <p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>This determines how we'll phrase the questions and where we send the results.</p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6 max-w-xl mx-auto">
-              <button onClick={() => setFillingFor('self')} className="bg-white rounded-xl border-2 border-neutral-200 p-8 text-center hover:border-neutral-900 transition-all group">
-                <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-neutral-900 transition-colors"><Users className="w-7 h-7 text-neutral-500 group-hover:text-white transition-colors" /></div>
-                <h3 className="font-semibold text-neutral-900 mb-1" style={{ fontFamily: serif }}>I'm the student</h3>
-                <p className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>I'll rate my own capacities</p>
-              </button>
-              <button onClick={() => setFillingFor('child')} className="bg-white rounded-xl border-2 border-neutral-200 p-8 text-center hover:border-neutral-900 transition-all group">
-                <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-neutral-900 transition-colors"><Shield className="w-7 h-7 text-neutral-500 group-hover:text-white transition-colors" /></div>
-                <h3 className="font-semibold text-neutral-900 mb-1" style={{ fontFamily: serif }}>I'm a parent</h3>
-                <p className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>I'll rate my child's capacities</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="min-h-screen bg-neutral-50">
         <div className="bg-neutral-950 text-white py-6 border-b border-neutral-800">
           <div className="max-w-3xl mx-auto px-6">
             <div className="flex items-center justify-between mb-4">
-              <button onClick={() => { if (diagnosticStep === 1) { setFillingFor(null); } else { setDiagnosticStep(1); } }} className="text-neutral-500 hover:text-white flex items-center gap-2 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4" /> Back</button>
-              <div className="flex items-center gap-3"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Diagnostic{isParentProxy ? ' (Parent)' : ''}</span></div>
+              <button onClick={() => setCurrentView('landing')} className="text-neutral-500 hover:text-white flex items-center gap-2 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4" /> Back</button>
+              <div className="flex items-center gap-3"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Diagnostic</span></div>
             </div>
             <h1 className="text-2xl font-bold" style={{ fontFamily: serif }}>Executive Function Diagnostic</h1>
-            <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Step {diagnosticStep} of 2: {diagnosticStep === 1 ? 'Rate Capacities' : 'Check Interventions'}</p>
+            <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Step {diagnosticStep} of 2: {diagnosticStep === 1 ? 'Rate Your Capacities' : 'Check Your Interventions'}</p>
             <div className="flex gap-2 mt-4">
               <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 1 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
               <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 2 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
@@ -737,13 +540,7 @@ export default function App() {
         <div className="max-w-3xl mx-auto px-6 py-8">
           {diagnosticStep === 1 && (
             <div>
-              <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-4 mb-8">
-                <p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>
-                  <strong className="text-neutral-900">Instructions:</strong> {isParentProxy
-                    ? "Rate your child's capacities from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on the patterns you've observed — not best-case scenarios. It's okay to estimate; your perspective as a parent is valuable data."
-                    : "Rate each capacity from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on patterns, not best-case scenarios."}
-                </p>
-              </div>
+              <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-4 mb-8"><p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}><strong className="text-neutral-900">Instructions:</strong> Rate each capacity from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on patterns, not best-case scenarios.</p></div>
               {efClusters.map((cluster, ci) => (
                 <div key={ci} className="mb-8">
                   <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2" style={{ fontFamily: serif }}><span className="bg-neutral-200 text-neutral-500 text-xs px-2 py-1 rounded font-medium" style={{ fontFamily: sans }}>Cluster {ci + 1}</span>{cluster.name}</h3>
@@ -751,7 +548,7 @@ export default function App() {
                     const Icon = capacityIcons[cap.id];
                     return (
                       <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-4">
-                        <div className="flex items-start gap-4 mb-4"><div className="bg-neutral-100 p-2 rounded-lg"><Icon className="w-6 h-6 text-neutral-600" /></div><div><h4 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h4><p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{isParentProxy ? cap.question.replace(/^I /,'My child ').replace(/^I'/,"My child'") : cap.question}</p></div></div>
+                        <div className="flex items-start gap-4 mb-4"><div className="bg-neutral-100 p-2 rounded-lg"><Icon className="w-6 h-6 text-neutral-600" /></div><div><h4 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h4><p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{cap.question}</p></div></div>
                         <div className="flex items-center gap-4">
                           <span className="text-xs text-neutral-500 w-24" style={{ fontFamily: sans }}>{cap.lowLabel}</span>
                           <div className="flex-1 flex gap-1">{[1,2,3,4,5,6,7,8,9,10].map(n => (<button key={n} onClick={() => handleCapacityRating(cap.id, n)} className={`flex-1 py-2 text-sm rounded transition-colors ${capacityRatings[cap.id] === n ? 'bg-neutral-900 text-white' : capacityRatings[cap.id] > n ? 'bg-neutral-200 text-neutral-700' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`} style={{ fontFamily: sans }}>{n}</button>))}</div>
@@ -772,12 +569,12 @@ export default function App() {
           )}
           {diagnosticStep === 2 && (
             <div>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8"><p className="text-amber-900 text-sm" style={{ fontFamily: sans }}><strong>{isParentProxy ? "Your Child's" : "Your"} 3 Weakest Capacities:</strong> Based on {isParentProxy ? "your" : "the"} ratings, we'll now check which support interventions {isParentProxy ? "your child has" : "you've"} already tried.</p></div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8"><p className="text-amber-900 text-sm" style={{ fontFamily: sans }}><strong>Your 3 Weakest Capacities:</strong> Based on your ratings, we'll now check which support interventions you've already tried.</p></div>
               {weakest.map((cap) => {
                 const capInt = interventions[cap.id]; const Icon = capacityIcons[cap.id];
                 return (
                   <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-                    <div className="flex items-center gap-4 mb-6"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-lg text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h3><p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>{isParentProxy ? "Your rating" : "Your rating"}: <span className="text-red-600 font-semibold">{capacityRatings[cap.id]}/10</span></p></div></div>
+                    <div className="flex items-center gap-4 mb-6"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-lg text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h3><p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>Your rating: <span className="text-red-600 font-semibold">{capacityRatings[cap.id]}/10</span></p></div></div>
                     {['training', 'environment', 'accountability'].map(lever => (
                       <div key={lever} className="mb-4">
                         <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-2 flex items-center gap-2" style={{ fontFamily: sans }}>
@@ -787,7 +584,7 @@ export default function App() {
                         <div className="space-y-2">{capInt[lever].map(int => (
                           <label key={int.id} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg cursor-pointer hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200">
                             <input type="checkbox" checked={interventionStatus[int.id] || false} onChange={() => handleInterventionToggle(int.id)} className="w-5 h-5 rounded border-neutral-300 accent-neutral-900" />
-                            <span className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{isParentProxy ? int.text.replace(/^I /,'My child ').replace(/^I'/,"My child'").replace(/^I've/,"My child has") : int.text}</span>
+                            <span className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{int.text}</span>
                           </label>
                         ))}</div>
                       </div>
@@ -796,35 +593,16 @@ export default function App() {
                 );
               })}
               <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold text-neutral-900 mb-4" style={{ fontFamily: serif }}>Get {isParentProxy ? "Your Child's" : "Your"} Results</h3>
-                {isParentProxy ? (
-                  <div className="space-y-4 mb-4">
-                    <div>
-                      <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Student's Name</label>
-                      <input type="text" placeholder="Your child's name" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Your Name (Parent)</label>
-                        <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Your Email (Parent)</label>
-                        <input type="email" placeholder="Your email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
-                    <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
-                  </div>
-                )}
-                <p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>{isParentProxy ? "We'll send you a detailed PDF report of your child's results." : "We'll send you a detailed PDF report and save your results."}</p>
+                <h3 className="font-semibold text-neutral-900 mb-4" style={{ fontFamily: serif }}>Get Your Results</h3>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
+                  <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
+                </div>
+                <p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>We'll send you a detailed PDF report and save your results.</p>
               </div>
               <div className="flex gap-4">
                 <button onClick={() => setDiagnosticStep(1)} className="px-6 py-3 border border-neutral-300 rounded-lg font-medium text-neutral-700 hover:bg-neutral-50 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4 inline mr-2" />Back</button>
-                <button onClick={handleViewResults} className="flex-1 bg-neutral-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>See {isParentProxy ? "the" : "My"} Results →</button>
+                <button onClick={handleViewResults} className="flex-1 bg-neutral-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>See My Results →</button>
               </div>
             </div>
           )}
@@ -845,7 +623,7 @@ export default function App() {
           <div className="max-w-3xl mx-auto px-6 text-center">
             <div className="flex items-center justify-center gap-3 mb-6"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Your Results</span></div>
             <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm mb-6" style={{ fontFamily: sans }}><Check className="w-4 h-4" /> Diagnostic Complete</div>
-            <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: serif }}>{(fillingFor === 'child' ? studentName : name) ? `${fillingFor === 'child' ? studentName : name}, here's ${fillingFor === 'child' ? 'the' : 'your'}` : "Here's the"} Execution Profile</h1>
+            <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: serif }}>{name ? `${name}, here's your` : "Here's your"} Execution Profile</h1>
             <p className="text-neutral-400" style={{ fontFamily: sans }}>We've identified your primary bottlenecks and the support levers you're missing.</p>
           </div>
         </div>
@@ -915,7 +693,7 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div className="text-center mt-8"><button onClick={() => { setCurrentView('landing'); setDiagnosticStep(1); setCapacityRatings({}); setInterventionStatus({}); setPdfDownloaded(false); setResultsSubmitted(false); setFillingFor(null); setParentEmail(''); setStudentName(''); setName(''); setEmail(''); }} className="text-neutral-500 hover:text-neutral-700 text-sm" style={{ fontFamily: sans }}>← Start Over</button></div>
+          <div className="text-center mt-8"><button onClick={() => { setCurrentView('landing'); setDiagnosticStep(1); setCapacityRatings({}); setInterventionStatus({}); setPdfDownloaded(false); setResultsSubmitted(false); }} className="text-neutral-500 hover:text-neutral-700 text-sm" style={{ fontFamily: sans }}>← Start Over</button></div>
         </div>
       </div>
     );
@@ -923,9 +701,9 @@ export default function App() {
 
   return (
     <div>
-      {currentView === 'landing' && LandingPage()}
-      {currentView === 'diagnostic' && Diagnostic()}
-      {currentView === 'results' && Results()}
+      {currentView === 'landing' && <LandingPage />}
+      {currentView === 'diagnostic' && <Diagnostic />}
+      {currentView === 'results' && <Results />}
     </div>
   );
 }

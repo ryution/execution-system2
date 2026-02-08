@@ -64,30 +64,24 @@ function handleDiagnostic(ss, data) {
   if (!sheet) {
     sheet = ss.insertSheet("Diagnostic Results");
     sheet.appendRow([
-      "Timestamp", "Filled By", "Name", "Email", "Student Name", "Parent Email",
-      "Recommendation", "Weakest Capacities", "Missing Levers", "All Ratings (JSON)"
+      "Timestamp", "Name", "Email", "Recommendation",
+      "Weakest Capacities", "Missing Levers", "All Ratings (JSON)"
     ]);
     // Format header row
-    sheet.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#f3f4f6");
+    sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#f3f4f6");
     sheet.setColumnWidth(1, 200);
-    sheet.setColumnWidth(2, 100);
-    sheet.setColumnWidth(3, 150);
-    sheet.setColumnWidth(4, 250);
-    sheet.setColumnWidth(5, 150);
+    sheet.setColumnWidth(2, 150);
+    sheet.setColumnWidth(3, 250);
+    sheet.setColumnWidth(4, 150);
+    sheet.setColumnWidth(5, 300);
     sheet.setColumnWidth(6, 250);
-    sheet.setColumnWidth(7, 150);
-    sheet.setColumnWidth(8, 300);
-    sheet.setColumnWidth(9, 250);
-    sheet.setColumnWidth(10, 400);
+    sheet.setColumnWidth(7, 400);
   }
   
   sheet.appendRow([
     data.timestamp || new Date().toISOString(),
-    data.fillingFor || "self",
     data.name || "",
     data.email || "",
-    data.studentName || "",
-    data.parentEmail || "",
     data.recommendation || "",
     data.weakestCapacities || "",
     data.missingLevers || "",
