@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { ChevronRight, ChevronLeft, Check, AlertCircle, Target, Calendar, Users, Brain, Clock, Zap, Shield, BarChart3, Sparkles, ArrowRight, BookOpen, ShieldCheck, ChevronDown, X, Download, Loader2 } from 'lucide-react';
 import { CONFIG } from './config.js';
-import { submitPlaybookEmail, submitDiagnosticResults } from './utils/sheets.js';
+import { submitPlaybookEmail, submitDiagnosticResults, submitToMailchimp } from './utils/sheets.js';
 import { downloadDiagnosticPDF } from './utils/pdf.js';
 
 // ─── DATA ──────────────────────────────────────────────────────
@@ -40,17 +40,160 @@ const efClusters = [
 ];
 
 const interventions = {
-  response_inhibition: { training: [{ id: "ri_mindfulness", text: "I practice mindfulness or breathing exercises regularly" }, { id: "ri_urge_surfing", text: "I use urge-surfing (waiting 60 seconds before acting on impulses)" }], environment: [{ id: "ri_notifications", text: "I've turned off non-essential notifications" }, { id: "ri_friction", text: "I've added friction to temptations (apps removed, snacks hidden, etc.)" }], accountability: [{ id: "ri_blocker", text: "Someone else controls my app blockers or screen time" }, { id: "ri_body_double", text: "I work with others present (body doubling, Focusmate)" }] },
-  emotional_regulation: { training: [{ id: "er_journaling", text: "I journal about difficult emotions when they arise" }, { id: "er_labeling", text: "I practice naming specific emotions (not just 'bad' or 'stressed')" }], environment: [{ id: "er_sleep", text: "I maintain consistent sleep (7-9 hours, fixed wake time)" }, { id: "er_exercise", text: "I exercise at least 3x per week" }], accountability: [{ id: "er_checkin", text: "I have regular emotional check-ins with someone I trust" }, { id: "er_therapist", text: "I work with a therapist or counselor" }] },
-  sustained_attention: { training: [{ id: "sa_pomodoro", text: "I use timed work blocks (Pomodoro, 52-17, etc.)" }, { id: "sa_microreview", text: "I do brief check-ins during work to catch drift" }], environment: [{ id: "sa_one_tab", text: "I use a single-tab browser or distraction blocker" }, { id: "sa_workspace", text: "I have a dedicated, distraction-free workspace" }], accountability: [{ id: "sa_focusmate", text: "I use Focusmate or work with a focus partner" }, { id: "sa_timer", text: "I share a visible timer with someone during work sessions" }] },
-  task_initiation: { training: [{ id: "ti_two_minute", text: "I use the two-minute rule (just start for 2 minutes)" }, { id: "ti_visualize", text: "I visualize the first physical motion before starting" }], environment: [{ id: "ti_prep", text: "I prepare materials the night before" }, { id: "ti_trigger", text: "I have a consistent start trigger (playlist, location, ritual)" }], accountability: [{ id: "ti_start_time", text: "I commit to specific start times with another person" }, { id: "ti_daily_call", text: "I have daily planning calls or check-ins" }] },
-  goal_persistence: { training: [{ id: "gp_process", text: "I set process goals, not just outcome goals" }, { id: "gp_why", text: "I regularly reconnect with WHY my goals matter" }], environment: [{ id: "gp_visible", text: "I have visible progress tracking (streaks, charts, boards)" }, { id: "gp_milestones", text: "I've broken big goals into clear milestones" }], accountability: [{ id: "gp_public", text: "I've made public commitments about my goals" }, { id: "gp_coach", text: "I check in regularly with a coach or accountability partner" }] },
-  planning: { training: [{ id: "pl_daily", text: "I do daily planning (time-blocking my calendar)" }, { id: "pl_weekly", text: "I do weekly reviews and planning sessions" }], environment: [{ id: "pl_calendar", text: "I use a calendar as my source of truth (not just to-do lists)" }, { id: "pl_eisenhower", text: "I use a prioritization system (Eisenhower matrix, etc.)" }], accountability: [{ id: "pl_review", text: "Someone reviews my plans with me" }, { id: "pl_witness", text: "I plan with another person present" }] },
-  organization: { training: [{ id: "or_reset", text: "I do end-of-day resets (clearing desk, processing inbox)" }, { id: "or_one_touch", text: "I practice one-touch rule (handle things once)" }], environment: [{ id: "or_single_inbox", text: "I have a single capture point for new tasks/info" }, { id: "or_taxonomy", text: "I have consistent folder/filing systems" }], accountability: [{ id: "or_photo", text: "I share workspace photos for accountability" }, { id: "or_audit", text: "Someone audits my systems with me periodically" }] },
-  time_awareness: { training: [{ id: "ta_estimate", text: "I estimate task duration, then track actual time to calibrate" }, { id: "ta_body", text: "I notice body-based time cues (fatigue, hunger)" }], environment: [{ id: "ta_visible_time", text: "I use visible timers and analog clocks" }, { id: "ta_buffer", text: "I schedule buffer blocks between appointments" }], accountability: [{ id: "ta_shared_cal", text: "I share my calendar with someone who can see my load" }, { id: "ta_deadline", text: "I report deadlines to an accountability partner" }] },
-  working_memory: { training: [{ id: "wm_external", text: "I externalize immediately (write everything down)" }, { id: "wm_teach", text: "I teach material aloud to strengthen retention" }], environment: [{ id: "wm_whiteboard", text: "I use whiteboards or visible dashboards" }, { id: "wm_spaced", text: "I use spaced repetition tools" }], accountability: [{ id: "wm_retrieval", text: "I practice retrieval with a partner" }, { id: "wm_progress", text: "I share progress boards with others" }] },
-  cognitive_flexibility: { training: [{ id: "cf_opposite", text: "I practice arguing the opposite view" }, { id: "cf_reappraise", text: "I reframe situations multiple ways" }], environment: [{ id: "cf_rotate", text: "I rotate work settings or tools periodically" }, { id: "cf_novelty", text: "I build in novelty and variety" }], accountability: [{ id: "cf_cross", text: "I get feedback from people outside my domain" }, { id: "cf_peer", text: "I have peers who challenge my assumptions" }] },
-  metacognition: { training: [{ id: "mc_reflection", text: "I do daily reflection (what worked, what didn't, lesson)" }, { id: "mc_aar", text: "I do after-action reviews on projects" }], environment: [{ id: "mc_journal", text: "I use structured journaling templates" }, { id: "mc_ai", text: "I use AI to help process thoughts and patterns" }], accountability: [{ id: "mc_debrief", text: "I have regular debriefs with a peer or coach" }, { id: "mc_feedback", text: "I actively seek feedback on my blind spots" }] }
+  response_inhibition: {
+    training: [
+      { id: "ri_implementation", text: "I have a pre-decided plan for impulse moments — 'When I feel the urge to X, I will do Y instead'" },
+      { id: "ri_mindfulness", text: "I practice deliberate pausing — noticing an urge before acting on it" }
+    ],
+    environment: [
+      { id: "ri_sleep", text: "I get consistent sleep (7–9 hours, same wake time daily)" },
+      { id: "ri_friction", text: "I've made temptations harder to reach — apps deleted, phone in another room, distractions physically removed" }
+    ],
+    accountability: [
+      { id: "ri_blocker", text: "Someone else manages my screen time limits or app restrictions" },
+      { id: "ri_body_double", text: "I work with other people in the room so I'm less likely to go off track" }
+    ]
+  },
+  emotional_regulation: {
+    training: [
+      { id: "er_reappraisal", text: "I reframe stressful situations before reacting — asking 'what else could this mean?' rather than going with my first emotional read" },
+      { id: "er_labeling", text: "I name my emotions precisely — 'frustrated' or 'overwhelmed,' not just 'stressed'" }
+    ],
+    environment: [
+      { id: "er_sleep", text: "I get consistent sleep (7–9 hours, same wake time daily)" },
+      { id: "er_exercise", text: "I exercise at least 3 times per week" }
+    ],
+    accountability: [
+      { id: "er_checkin", text: "I have regular check-ins with someone I trust about how I'm doing emotionally" },
+      { id: "er_therapist", text: "I work with a therapist or counselor" }
+    ]
+  },
+  sustained_attention: {
+    training: [
+      { id: "sa_meditation", text: "I practice focused-attention meditation — even 10 minutes a day trains the ability to hold focus" },
+      { id: "sa_pomodoro", text: "I work in timed blocks with scheduled breaks (e.g., 25 or 50 minutes on, then rest)" }
+    ],
+    environment: [
+      { id: "sa_one_tab", text: "During focused work, I limit myself to one tab, one app, one task at a time" },
+      { id: "sa_nature", text: "I take 20-minute breaks outdoors or in green space — nature restores the ability to concentrate" }
+    ],
+    accountability: [
+      { id: "sa_body_double", text: "I work alongside other people (library, study partner, co-working) to stay on task" },
+      { id: "sa_timer", text: "I use a visible timer and tell someone how many focused blocks I completed" }
+    ]
+  },
+  task_initiation: {
+    training: [
+      { id: "ti_implementation", text: "I pre-commit to exactly when and where I'll start — 'At 9am at my desk, I will open the document'" },
+      { id: "ti_temptation_bundle", text: "I pair dreaded tasks with something I enjoy — a favorite playlist, a good drink, a comfortable spot" }
+    ],
+    environment: [
+      { id: "ti_activation", text: "I make starting as easy as possible — materials already out, browser tab already open, zero setup needed" },
+      { id: "ti_trigger", text: "I have a consistent start ritual — same place, same time, same first action" }
+    ],
+    accountability: [
+      { id: "ti_start_time", text: "I tell someone else exactly when I'm going to start, and they expect to hear from me" },
+      { id: "ti_daily_call", text: "I have a daily planning call or check-in that creates a real start time" }
+    ]
+  },
+  goal_persistence: {
+    training: [
+      { id: "gp_woop", text: "I picture the outcome I want, then immediately picture what's most likely to get in the way — this combination works better than positive thinking alone" },
+      { id: "gp_process", text: "I set goals around actions I control ('write for 30 minutes') rather than outcomes I can't ('get an A')" }
+    ],
+    environment: [
+      { id: "gp_visible", text: "I track progress somewhere visible — a streak chart, a whiteboard, a checklist I can see daily" },
+      { id: "gp_milestones", text: "I've broken big goals into smaller milestones with their own deadlines" }
+    ],
+    accountability: [
+      { id: "gp_commitment", text: "I've made a commitment with real stakes — someone who follows up, a public promise, something I'd lose" },
+      { id: "gp_coach", text: "I check in regularly with someone who asks what I committed to and whether I did it" }
+    ]
+  },
+  planning: {
+    training: [
+      { id: "pl_premortem", text: "Before starting a plan, I ask: 'Imagine this has already failed — what went wrong?' This catches blind spots normal planning misses" },
+      { id: "pl_multiplier", text: "I multiply my first time estimate by 1.5–2x — people almost always underestimate how long things take" }
+    ],
+    environment: [
+      { id: "pl_calendar", text: "I use a calendar with time-blocks, not just a to-do list — tasks get a specific slot or they don't happen" },
+      { id: "pl_daily", text: "I spend 5–10 minutes each morning reviewing what's ahead and deciding what matters most today" }
+    ],
+    accountability: [
+      { id: "pl_review", text: "Someone reviews my plans with me — not just what I intend to do, but whether the time math works" },
+      { id: "pl_weekly", text: "I do a weekly review with another person: what got done, what didn't, what to adjust" }
+    ]
+  },
+  organization: {
+    training: [
+      { id: "or_reset", text: "I do an end-of-day reset: clear the desk, process the inbox, close open loops" },
+      { id: "or_one_touch", text: "I handle things once — decide on the spot rather than moving them to a different pile" }
+    ],
+    environment: [
+      { id: "or_single_inbox", text: "I have one single place where all new tasks, ideas, and info get captured" },
+      { id: "or_taxonomy", text: "I have a filing system I actually use — consistent folders, consistent names" }
+    ],
+    accountability: [
+      { id: "or_audit", text: "Someone periodically looks at my systems with me and helps me clean them up" },
+      { id: "or_checkin", text: "I report on whether my systems are actually being maintained, not just whether they exist" }
+    ]
+  },
+  time_awareness: {
+    training: [
+      { id: "ta_estimate", text: "Before starting a task, I guess how long it will take — then I time it and compare. This calibrates my internal clock" },
+      { id: "ta_track", text: "I track where my time actually goes each day, even roughly — most people are shocked by the gap between perception and reality" }
+    ],
+    environment: [
+      { id: "ta_visible_time", text: "I keep visible clocks and timers in my workspace so time doesn't become invisible" },
+      { id: "ta_buffer", text: "I schedule buffer time between commitments rather than stacking everything back-to-back" }
+    ],
+    accountability: [
+      { id: "ta_shared_cal", text: "I share my calendar with someone who can see how packed it actually is" },
+      { id: "ta_deadline", text: "I tell someone else my deadlines and time estimates so I can't quietly ignore them" }
+    ]
+  },
+  working_memory: {
+    training: [
+      { id: "wm_external", text: "I write things down immediately — if it's in my head, it's at risk. If it's on paper, it's safe" },
+      { id: "wm_chunking", text: "I group related information into clusters rather than trying to remember individual pieces" }
+    ],
+    environment: [
+      { id: "wm_singletask", text: "I keep only one task visible at a time — one app, one document, one thing" },
+      { id: "wm_whiteboard", text: "I use a whiteboard or visible dashboard so active priorities aren't buried in my head" }
+    ],
+    accountability: [
+      { id: "wm_retrieval", text: "I test myself on what I'm supposed to remember rather than just re-reading it — recall beats review" },
+      { id: "wm_checkin", text: "I regularly talk through what's on my plate with someone, so nothing slips through the cracks" }
+    ]
+  },
+  cognitive_flexibility: {
+    training: [
+      { id: "cf_interleave", text: "I mix up types of practice rather than grinding one thing — alternating between different problems builds adaptability" },
+      { id: "cf_opposite", text: "I argue the opposite side of my own position before committing to it" }
+    ],
+    environment: [
+      { id: "cf_rotate", text: "I change my setting or approach periodically — same routine too long creates rigidity" },
+      { id: "cf_novelty", text: "I deliberately seek out unfamiliar perspectives — new people, different fields, methods I haven't tried" }
+    ],
+    accountability: [
+      { id: "cf_cross", text: "I get feedback from people outside my usual world" },
+      { id: "cf_challenge", text: "I have someone who will push back on my thinking, not just agree with me" }
+    ]
+  },
+  metacognition: {
+    training: [
+      { id: "mc_calibration", text: "Before a task, I predict how I'll do — then I compare the prediction to what actually happened. This builds self-awareness fast" },
+      { id: "mc_reflection", text: "I do a brief daily review: what worked, what didn't, what I'd do differently" }
+    ],
+    environment: [
+      { id: "mc_journal", text: "I use a structured template for reflection — not freeform journaling, but specific prompts that force honest answers" },
+      { id: "mc_data", text: "I keep a simple log of what I committed to vs. what I completed — the pattern tells me more than any single day" }
+    ],
+    accountability: [
+      { id: "mc_debrief", text: "I debrief regularly with someone who asks hard questions about my process, not just my results" },
+      { id: "mc_feedback", text: "I ask people who will be honest to tell me what I'm not seeing about myself" }
+    ]
+  }
 };
 
 const capacityIcons = {
@@ -88,89 +231,28 @@ const openCalendly = () => window.open(CONFIG.calendlyUrl, '_blank');
 const serif = "'Playfair Display', Georgia, serif";
 const sans = "'DM Sans', system-ui, sans-serif";
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────
-export default function App() {
-  const [currentView, setCurrentView] = useState('landing');
-  const [diagnosticStep, setDiagnosticStep] = useState(1);
-  const [capacityRatings, setCapacityRatings] = useState({});
-  const [interventionStatus, setInterventionStatus] = useState({});
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [audience, setAudience] = useState('parent');
-  const [showPlaybookModal, setShowPlaybookModal] = useState(false);
-  const [playbookEmail, setPlaybookEmail] = useState('');
-  const [playbookSubmitted, setPlaybookSubmitted] = useState(false);
-  const [playbookSubmitting, setPlaybookSubmitting] = useState(false);
-  const [openFaq, setOpenFaq] = useState(null);
-  const [resultsSubmitted, setResultsSubmitted] = useState(false);
-  const [pdfDownloaded, setPdfDownloaded] = useState(false);
+// ═══════════════════════════════════════════════════════════════
+//  SHARED CONTEXT — all state flows through here
+// ═══════════════════════════════════════════════════════════════
+const AppContext = createContext();
 
-  const allCapacities = efClusters.flatMap(c => c.capacities);
+// ─── Stateless FAQ Item ──────────────────────────────────────
+function FaqItem({ q, a, isOpen, onClick }) {
+  return (
+    <div className="border-b border-neutral-200 last:border-0">
+      <button onClick={onClick} className="w-full flex items-center justify-between py-5 text-left group">
+        <span className="font-medium text-neutral-900 pr-8 group-hover:text-neutral-700 transition-colors" style={{ fontFamily: sans }}>{q}</span>
+        <ChevronDown className={`w-5 h-5 text-neutral-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && <div className="pb-5 -mt-1"><p className="text-neutral-600 leading-relaxed text-sm" style={{ fontFamily: sans }}>{a}</p></div>}
+    </div>
+  );
+}
 
-  const getWeakestCapacities = () => {
-    const sorted = Object.entries(capacityRatings).sort(([,a], [,b]) => a - b).slice(0, 3);
-    return sorted.map(([id]) => allCapacities.find(c => c.id === id));
-  };
-
-  const calculateResults = () => {
-    const weakest = getWeakestCapacities();
-    const results = weakest.map(cap => {
-      const capInt = interventions[cap.id];
-      const implemented = { training: capInt.training.filter(i => interventionStatus[i.id]).length, environment: capInt.environment.filter(i => interventionStatus[i.id]).length, accountability: capInt.accountability.filter(i => interventionStatus[i.id]).length };
-      const total = { training: capInt.training.length, environment: capInt.environment.length, accountability: capInt.accountability.length };
-      const percentages = { training: implemented.training / total.training, environment: implemented.environment / total.environment, accountability: implemented.accountability / total.accountability };
-      const lowestLever = Object.entries(percentages).sort(([,a], [,b]) => a - b)[0][0];
-      return { capacity: cap, rating: capacityRatings[cap.id], implemented, total, percentages, missingLever: lowestLever };
-    });
-    const accountabilityGaps = results.filter(r => r.missingLever === 'accountability').length;
-    const environmentGaps = results.filter(r => r.missingLever === 'environment').length;
-    let recommendation = 'full_system';
-    if (environmentGaps >= 2 && accountabilityGaps === 0) recommendation = 'coach_only';
-    return { weakest: results, recommendation };
-  };
-
-  const handleCapacityRating = (id, value) => setCapacityRatings(prev => ({ ...prev, [id]: value }));
-  const handleInterventionToggle = (id) => setInterventionStatus(prev => ({ ...prev, [id]: !prev[id] }));
-  const isStep1Complete = Object.keys(capacityRatings).length === allCapacities.length;
-
-  // ─── Playbook submission ─────────────────────────────────────
-  const handlePlaybookSubmit = async () => {
-    if (!playbookEmail || !playbookEmail.includes('@')) return;
-    setPlaybookSubmitting(true);
-    await submitPlaybookEmail(playbookEmail);
-    setPlaybookSubmitting(false);
-    setPlaybookSubmitted(true);
-  };
-
-  // ─── Results submission + PDF ────────────────────────────────
-  const handleViewResults = async () => {
-    setCurrentView('results');
-    // Submit to sheets in background
-    const results = calculateResults();
-    if (email) {
-      submitDiagnosticResults({
-        name, email, capacityRatings,
-        recommendation: results.recommendation,
-        weakestCapacities: results.weakest.map(r => r.capacity.name),
-        missingLevers: results.weakest.map(r => r.missingLever),
-      });
-      setResultsSubmitted(true);
-    }
-  };
-
-  const handleDownloadPDF = () => {
-    const results = calculateResults();
-    downloadDiagnosticPDF({
-      name, capacityRatings,
-      results: results.weakest,
-      recommendation: results.recommendation,
-      allCapacities,
-    });
-    setPdfDownloaded(true);
-  };
-
-  // ─── Playbook Modal ──────────────────────────────────────────
-  const PlaybookModal = () => (
+// ─── Playbook Modal ──────────────────────────────────────────
+function PlaybookModal() {
+  const { playbookSubmitted, playbookEmail, setPlaybookEmail, handlePlaybookSubmit, playbookSubmitting, setShowPlaybookModal, setPlaybookSubmitted } = useContext(AppContext);
+  return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowPlaybookModal(false); setPlaybookSubmitted(false); }}>
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative" onClick={e => e.stopPropagation()}>
         <button onClick={() => { setShowPlaybookModal(false); setPlaybookSubmitted(false); }} className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
@@ -204,22 +286,14 @@ export default function App() {
       </div>
     </div>
   );
+}
 
-  // ─── FAQ Item ────────────────────────────────────────────────
-  const FaqItem = ({ q, a, isOpen, onClick }) => (
-    <div className="border-b border-neutral-200 last:border-0">
-      <button onClick={onClick} className="w-full flex items-center justify-between py-5 text-left group">
-        <span className="font-medium text-neutral-900 pr-8 group-hover:text-neutral-700 transition-colors" style={{ fontFamily: sans }}>{q}</span>
-        <ChevronDown className={`w-5 h-5 text-neutral-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {isOpen && <div className="pb-5 -mt-1"><p className="text-neutral-600 leading-relaxed text-sm" style={{ fontFamily: sans }}>{a}</p></div>}
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════
-  //  LANDING PAGE
-  // ═══════════════════════════════════════════════════════════════
-  const LandingPage = () => (
+// ═══════════════════════════════════════════════════════════════
+//  LANDING PAGE
+// ═══════════════════════════════════════════════════════════════
+function LandingPage() {
+  const { setCurrentView, setShowPlaybookModal, showPlaybookModal, openFaq, setOpenFaq } = useContext(AppContext);
+  return (
     <div className="min-h-screen bg-neutral-50">
       {/* Nav */}
       <nav className="bg-neutral-950 border-b border-neutral-800">
@@ -230,10 +304,6 @@ export default function App() {
             <span className="text-neutral-400 text-sm" style={{ fontFamily: sans }}>The Execution System</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-neutral-900 rounded-lg p-0.5 border border-neutral-800">
-              <button onClick={() => setAudience('parent')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${audience === 'parent' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`} style={{ fontFamily: sans }}>For Parents</button>
-              <button onClick={() => setAudience('student')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${audience === 'student' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`} style={{ fontFamily: sans }}>For Students</button>
-            </div>
             <button onClick={() => setCurrentView('diagnostic')} className="bg-white text-neutral-900 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-neutral-100 transition-colors hidden sm:block" style={{ fontFamily: sans }}>Take the Diagnostic</button>
           </div>
         </div>
@@ -245,13 +315,9 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-6 pt-24 pb-20 relative">
           <div className="max-w-3xl">
             <p className="text-neutral-500 text-sm font-medium tracking-widest uppercase mb-6" style={{ fontFamily: sans }}>FROM WHETSTONE</p>
-            {audience === 'parent' ? (
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-[1.15]" style={{ fontFamily: serif }}>Your Child Knows What to Do.<br /><span className="text-amber-400">They Can't Make Themselves Do It.</span></h1>
-            ) : (
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-[1.15]" style={{ fontFamily: serif }}>Stop Trying Harder.<br /><span className="text-amber-400">Install Structure.</span></h1>
-            )}
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-[1.15]" style={{ fontFamily: serif }}>Stop Trying Harder.<br /><span className="text-amber-400">Install Structure.</span></h1>
             <p className="text-xl text-neutral-400 mb-10 leading-relaxed max-w-2xl" style={{ fontFamily: sans }}>
-              {audience === 'parent' ? "We diagnose exactly where your child's execution breaks down, then install the support infrastructure that makes follow-through inevitable — so you can stop being the taskmaster." : "We diagnose exactly where your execution breaks down, then install the support infrastructure that makes follow-through inevitable."}
+              {"We diagnose exactly where your execution breaks down, then install the support infrastructure that makes follow-through inevitable."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button onClick={() => setCurrentView('diagnostic')} className="bg-white text-neutral-900 px-8 py-4 rounded-lg font-semibold text-base hover:bg-neutral-100 transition-all shadow-lg shadow-black/20" style={{ fontFamily: sans }}>Take the Free Diagnostic →</button>
@@ -267,7 +333,7 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-6 text-center">
           <p className="text-neutral-400 text-base leading-relaxed" style={{ fontFamily: sans }}>
             We sit <em className="text-neutral-200 not-italic font-medium">underneath</em> therapy, tutoring, and productivity apps — making them work.
-            {audience === 'parent' ? " We're not competing with your child's other support. We're the infrastructure that holds it together." : " We're not another tool. We're the infrastructure that holds your tools together."}
+            {" We're not another tool. We're the infrastructure that holds your tools together."}
           </p>
         </div>
       </div>
@@ -275,21 +341,17 @@ export default function App() {
       {/* Problem Section */}
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-14">
-          <h2 className="text-3xl font-bold text-neutral-900 mb-4" style={{ fontFamily: serif }}>{audience === 'parent' ? "The Problem Isn't Laziness" : "The Problem Isn't Motivation"}</h2>
+          <h2 className="text-3xl font-bold text-neutral-900 mb-4" style={{ fontFamily: serif }}>The Problem Isn't Motivation</h2>
           <p className="text-lg text-neutral-600 max-w-2xl mx-auto" style={{ fontFamily: sans }}>
-            {audience === 'parent' ? "You've tried planners, apps, tutors, and reminders. They work for a week, then collapse. The issue isn't effort or intelligence — it's missing structural support that no amount of nagging can replace." : "You know what to do. You've tried planners, apps, and productivity systems. They work for a week, then collapse. The issue isn't effort — it's missing structural support."}
+            {"You know what to do. You've tried planners, apps, and productivity systems. They work for a week, then collapse. The issue isn't effort — it's missing structural support."}
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {(audience === 'parent' ? [
-            { icon: Brain, title: "Not a Character Flaw", desc: "Executive function has 11 distinct capacities. Most students have 1–2 weak ones that bottleneck everything — and they develop on different timelines." },
-            { icon: Target, title: "Three Levers, Not One", desc: "Every capacity can be improved through training, environment design, OR accountability. Most families only try the first." },
-            { icon: Users, title: "You Shouldn't Be the System", desc: "When parents become the accountability structure, it damages the relationship. We install external infrastructure so you don't have to." }
-          ] : [
+          {[
             { icon: Brain, title: "Not a Character Flaw", desc: "Executive function has 11 distinct capacities. Most people have 1–2 weak ones that bottleneck everything else." },
             { icon: Target, title: "Three Levers, Not One", desc: "Every capacity improves through training, environment design, OR accountability. Most people only try training." },
             { icon: Users, title: "Accountability Is Underrated", desc: "The single most effective intervention is the most neglected: structured external support." }
-          ]).map((item, i) => (
+          ].map((item, i) => (
             <div key={i} className="bg-white rounded-xl p-7 border border-neutral-200 hover:border-neutral-300 transition-colors">
               <div className="w-12 h-12 bg-neutral-100 rounded-xl flex items-center justify-center mb-5"><item.icon className="w-6 h-6 text-neutral-700" /></div>
               <h3 className="font-semibold text-lg text-neutral-900 mb-2" style={{ fontFamily: serif }}>{item.title}</h3>
@@ -309,7 +371,7 @@ export default function App() {
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             {[
               { num: "01", title: "Weekly Accountability Coach", desc: "45–60 minutes. Wins, losses, learnings, commitments. When something breaks, we diagnose exactly what failed and adjust the system. Misses become data, not discouragement.", detail: "Trained in executive function diagnostics and failure-mode analysis" },
-              { num: "02", title: "Dedicated Executive Assistant", desc: audience === 'parent' ? "10-minute daily planning call. Reviews today's calendar, confirms start times, identifies friction, logs yesterday's completions. Your child's schedule becomes real — without you enforcing it." : "10-minute daily planning call. Reviews today's calendar, confirms start times, identifies friction, logs yesterday's completions. Your schedule becomes real.", detail: "Also handles: reminders, logistics, friction removal, completion logging" },
+              { num: "02", title: "Dedicated Executive Assistant", desc: "10-minute daily planning call. Reviews today's calendar, confirms start times, identifies friction, logs yesterday's completions. Your schedule becomes real.", detail: "Also handles: reminders, logistics, friction removal, completion logging" },
               { num: "03", title: "Failure-Mode Diagnostics", desc: "After weeks 3–4, a formalized written analysis: pattern-level diagnosis, prescription map, updated load calibration, and explicit identification of sabotage points.", detail: "Converts misses into data — prevents the discouragement spiral" }
             ].map((step, i) => (
               <div key={i} className="relative">
@@ -352,7 +414,7 @@ export default function App() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm mb-6" style={{ fontFamily: sans }}><ShieldCheck className="w-4 h-4" /> Our Guarantee</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: serif }}>Do the Work, or Don't Pay.</h2>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto" style={{ fontFamily: sans }}>If {audience === 'parent' ? 'your child follows' : 'you follow'} the system and execution doesn't improve within 30 days, we refund you.</p>
+            <p className="text-neutral-400 text-lg max-w-2xl mx-auto" style={{ fontFamily: sans }}>If you follow the system and execution doesn't improve within 30 days, we refund you.</p>
           </div>
           <div className="bg-neutral-900 rounded-2xl p-8 border border-neutral-800">
             <p className="text-neutral-300 text-sm mb-6" style={{ fontFamily: sans }}><strong className="text-white">Execution improvement</strong> means any two of the following within 30 days:</p>
@@ -362,7 +424,7 @@ export default function App() {
               ))}
             </div>
             <div className="border-t border-neutral-800 pt-6">
-              <p className="text-neutral-400 text-sm leading-relaxed" style={{ fontFamily: sans }}><strong className="text-neutral-200">The logic:</strong> Execution improves when structure is followed. If {audience === 'parent' ? 'your child attends' : 'you attend'} every session, {audience === 'parent' ? 'follows' : 'follow'} the daily structure, {audience === 'parent' ? 'responds' : 'respond'} to check-ins, and {audience === 'parent' ? 'reports' : 'report'} honestly — and execution still doesn't improve — the system has failed. We refund you. This is epistemic integrity, not customer service.</p>
+              <p className="text-neutral-400 text-sm leading-relaxed" style={{ fontFamily: sans }}><strong className="text-neutral-200">The logic:</strong> Execution improves when structure is followed. If you attend every session, follow the daily structure, respond to check-ins, and report honestly — and execution still doesn't improve — the system has failed. We refund you. This is epistemic integrity, not customer service.</p>
             </div>
           </div>
           <p className="text-neutral-600 text-xs text-center mt-6 max-w-lg mx-auto" style={{ fontFamily: sans }}>The guarantee covers structural execution metrics. It does not cover grades, admissions outcomes, motivation levels, or clinical symptoms.</p>
@@ -374,14 +436,14 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-neutral-900 mb-4" style={{ fontFamily: serif }}>What This Replaces</h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto" style={{ fontFamily: sans }}>{audience === 'parent' ? "Most families are already spending this much — spread across interventions that treat symptoms instead of the root." : "You may already be spending this much on tools and support that address symptoms, not structure."}</p>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto" style={{ fontFamily: sans }}>{"You may already be spending this much on tools and support that address symptoms, not structure."}</p>
           </div>
           <div className="space-y-3">
             {[
               { item: "Executive function coach (1x/week)", cost: "$400–600/mo", note: "Included — plus formalized failure diagnostics" },
               { item: "Private tutor (2x/week)", cost: "$600–1,200/mo", note: "Often unnecessary once execution improves" },
               { item: "Productivity app subscriptions", cost: "$30–80/mo", note: "Apps fail without structure underneath" },
-              { item: audience === 'parent' ? "Parent time managing logistics" : "Time lost to panic-mode catch-up", cost: audience === 'parent' ? "Incalculable" : "Hours/week", note: audience === 'parent' ? "Monthly reports replace daily policing" : "Replaced by daily EA planning calls" },
+              { item: "Time lost to panic-mode catch-up", cost: "Hours/week", note: "Replaced by daily EA planning calls" },
             ].map((row, i) => (
               <div key={i} className="bg-white rounded-lg border border-neutral-200 px-6 py-4 flex items-center justify-between">
                 <div className="flex-1"><p className="text-neutral-900 text-sm font-medium" style={{ fontFamily: sans }}>{row.item}</p><p className="text-neutral-500 text-xs mt-0.5" style={{ fontFamily: sans }}>{row.note}</p></div>
@@ -451,7 +513,7 @@ export default function App() {
               <div className="text-3xl font-bold mb-1" style={{ fontFamily: sans }}>$1,500–2,000<span className="text-base font-normal text-neutral-500">/month</span></div>
               <p className="text-neutral-500 text-xs mb-6" style={{ fontFamily: sans }}>3-month minimum · 30-day guarantee</p>
               <ul className="space-y-3 mb-8">
-                {["Everything in Tier 1", "Dedicated Executive Assistant", "Daily structure & time-blocking", "EA friction removal & reminders", "Completion logging", audience === 'parent' ? "Monthly parent reporting" : "Monthly progress reporting", "Formalized failure diagnostics", "Full bonus package (Playbook, videos, reboot protocol)"].map((item, i) => (
+                {["Everything in Tier 1", "Dedicated Executive Assistant", "Daily structure & time-blocking", "EA friction removal & reminders", "Completion logging", "Monthly progress reporting", "Formalized failure diagnostics", "Full bonus package (Playbook, videos, reboot protocol)"].map((item, i) => (
                   <li key={i} className="flex items-center gap-3"><Check className="w-4 h-4 text-amber-400/70 flex-shrink-0" /><span className="text-neutral-200 text-sm" style={{ fontFamily: sans }}>{item}</span></li>
                 ))}
               </ul>
@@ -461,7 +523,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Founder — with real photo */}
+      {/* Founder */}
       <div className="bg-white border-y border-neutral-200 py-20">
         <div className="max-w-4xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-10 items-start">
@@ -483,7 +545,7 @@ export default function App() {
         <div className="max-w-3xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-neutral-900 mb-12 text-center" style={{ fontFamily: serif }}>Frequently Asked Questions</h2>
           <div className="bg-white rounded-xl border border-neutral-200 px-6">
-            {faqData[audience].map((item, i) => (<FaqItem key={i} q={item.q} a={item.a} isOpen={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? null : i)} />))}
+            {faqData.student.map((item, i) => (<FaqItem key={i} q={item.q} a={item.a} isOpen={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? null : i)} />))}
           </div>
         </div>
       </div>
@@ -491,8 +553,8 @@ export default function App() {
       {/* Final CTA */}
       <div className="bg-neutral-950 py-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: serif }}>{audience === 'parent' ? "Find Their Bottleneck in 5 Minutes" : "Find Your Bottleneck in 5 Minutes"}</h2>
-          <p className="text-neutral-400 mb-10" style={{ fontFamily: sans }}>The diagnostic identifies {audience === 'parent' ? "your child's" : "your"} weakest executive function capacities and which support levers are missing. Free, instant results.</p>
+          <h2 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: serif }}>{"Find Your Bottleneck in 5 Minutes"}</h2>
+          <p className="text-neutral-400 mb-10" style={{ fontFamily: sans }}>The diagnostic identifies {"your"} weakest executive function capacities and which support levers are missing. Free, instant results.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => setCurrentView('diagnostic')} className="bg-white text-neutral-900 px-8 py-4 rounded-lg font-semibold text-base hover:bg-neutral-100 transition-all" style={{ fontFamily: sans }}>Start the Diagnostic →</button>
             <button onClick={() => setShowPlaybookModal(true)} className="text-neutral-500 hover:text-white px-6 py-4 font-medium transition-all flex items-center gap-2" style={{ fontFamily: sans }}><BookOpen className="w-5 h-5" /> Or read the Playbook first</button>
@@ -515,12 +577,19 @@ export default function App() {
       {showPlaybookModal && <PlaybookModal />}
     </div>
   );
+}
 
-  // ═══════════════════════════════════════════════════════════════
-  //  DIAGNOSTIC
-  // ═══════════════════════════════════════════════════════════════
-  const Diagnostic = () => {
-    const weakest = getWeakestCapacities();
+// ═══════════════════════════════════════════════════════════════
+//  DIAGNOSTIC
+// ═══════════════════════════════════════════════════════════════
+function Diagnostic() {
+  const ctx = useContext(AppContext);
+  const { fillingFor, setFillingFor, setCurrentView, diagnosticStep, setDiagnosticStep, capacityRatings, handleCapacityRating, interventionStatus, handleInterventionToggle, isStep1Complete, allCapacities, getWeakestCapacities, name, setName, email, setEmail, parentEmail, setParentEmail, studentName, setStudentName, handleViewResults } = ctx;
+  const weakest = getWeakestCapacities();
+  const isParentProxy = fillingFor === 'child';
+
+  // ── Who-is-filling-this-out gate ──
+  if (!fillingFor) {
     return (
       <div className="min-h-screen bg-neutral-50">
         <div className="bg-neutral-950 text-white py-6 border-b border-neutral-800">
@@ -530,180 +599,355 @@ export default function App() {
               <div className="flex items-center gap-3"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Diagnostic</span></div>
             </div>
             <h1 className="text-2xl font-bold" style={{ fontFamily: serif }}>Executive Function Diagnostic</h1>
-            <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Step {diagnosticStep} of 2: {diagnosticStep === 1 ? 'Rate Your Capacities' : 'Check Your Interventions'}</p>
-            <div className="flex gap-2 mt-4">
-              <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 1 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
-              <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 2 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
-            </div>
+            <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Before we begin</p>
           </div>
         </div>
-        <div className="max-w-3xl mx-auto px-6 py-8">
-          {diagnosticStep === 1 && (
-            <div>
-              <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-4 mb-8"><p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}><strong className="text-neutral-900">Instructions:</strong> Rate each capacity from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on patterns, not best-case scenarios.</p></div>
-              {efClusters.map((cluster, ci) => (
-                <div key={ci} className="mb-8">
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2" style={{ fontFamily: serif }}><span className="bg-neutral-200 text-neutral-500 text-xs px-2 py-1 rounded font-medium" style={{ fontFamily: sans }}>Cluster {ci + 1}</span>{cluster.name}</h3>
-                  {cluster.capacities.map((cap) => {
-                    const Icon = capacityIcons[cap.id];
-                    return (
-                      <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-4">
-                        <div className="flex items-start gap-4 mb-4"><div className="bg-neutral-100 p-2 rounded-lg"><Icon className="w-6 h-6 text-neutral-600" /></div><div><h4 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h4><p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{cap.question}</p></div></div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-neutral-500 w-24" style={{ fontFamily: sans }}>{cap.lowLabel}</span>
-                          <div className="flex-1 flex gap-1">{[1,2,3,4,5,6,7,8,9,10].map(n => (<button key={n} onClick={() => handleCapacityRating(cap.id, n)} className={`flex-1 py-2 text-sm rounded transition-colors ${capacityRatings[cap.id] === n ? 'bg-neutral-900 text-white' : capacityRatings[cap.id] > n ? 'bg-neutral-200 text-neutral-700' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`} style={{ fontFamily: sans }}>{n}</button>))}</div>
-                          <span className="text-xs text-neutral-500 w-24 text-right" style={{ fontFamily: sans }}>{cap.highLabel}</span>
-                        </div>
+        <div className="max-w-3xl mx-auto px-6 py-12">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-neutral-900 mb-3" style={{ fontFamily: serif }}>Who is taking this diagnostic?</h2>
+            <p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>This determines how we'll phrase the questions and where we send the results.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <button onClick={() => setFillingFor('self')} className="bg-white rounded-xl border-2 border-neutral-200 p-8 text-center hover:border-neutral-900 transition-all group">
+              <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-neutral-900 transition-colors"><BookOpen className="w-7 h-7 text-neutral-500 group-hover:text-white transition-colors" /></div>
+              <h3 className="font-semibold text-neutral-900 mb-1" style={{ fontFamily: serif }}>I'm a student</h3>
+              <p className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>I'll rate my own capacities</p>
+            </button>
+            <button onClick={() => setFillingFor('child')} className="bg-white rounded-xl border-2 border-neutral-200 p-8 text-center hover:border-neutral-900 transition-all group">
+              <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-neutral-900 transition-colors"><Shield className="w-7 h-7 text-neutral-500 group-hover:text-white transition-colors" /></div>
+              <h3 className="font-semibold text-neutral-900 mb-1" style={{ fontFamily: serif }}>I'm a parent</h3>
+              <p className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>I'll rate my child's capacities</p>
+            </button>
+            <button onClick={() => setFillingFor('self')} className="bg-white rounded-xl border-2 border-neutral-200 p-8 text-center hover:border-neutral-900 transition-all group">
+              <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-neutral-900 transition-colors"><Target className="w-7 h-7 text-neutral-500 group-hover:text-white transition-colors" /></div>
+              <h3 className="font-semibold text-neutral-900 mb-1" style={{ fontFamily: serif }}>I'm a professional</h3>
+              <p className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>I want to improve my own execution</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      <div className="bg-neutral-950 text-white py-6 border-b border-neutral-800">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => { if (diagnosticStep === 1) { setFillingFor(null); } else { setDiagnosticStep(1); } }} className="text-neutral-500 hover:text-white flex items-center gap-2 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4" /> Back</button>
+            <div className="flex items-center gap-3"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Diagnostic{isParentProxy ? ' (Parent)' : ''}</span></div>
+          </div>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: serif }}>Executive Function Diagnostic</h1>
+          <p className="text-neutral-400 text-sm mt-1" style={{ fontFamily: sans }}>Step {diagnosticStep} of 2: {diagnosticStep === 1 ? 'Rate Capacities' : 'Check Interventions'}</p>
+          <div className="flex gap-2 mt-4">
+            <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 1 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
+            <div className={`h-1.5 flex-1 rounded-full ${diagnosticStep >= 2 ? 'bg-amber-400' : 'bg-neutral-800'}`} />
+          </div>
+        </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {diagnosticStep === 1 && (
+          <div>
+            <div className="bg-neutral-100 border border-neutral-200 rounded-xl p-4 mb-8">
+              <p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>
+                <strong className="text-neutral-900">Instructions:</strong> {isParentProxy
+                  ? "Rate your child's capacities from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on the patterns you've observed — not best-case scenarios. It's okay to estimate; your perspective as a parent is valuable data."
+                  : "Rate each capacity from 1 (consistently breaks down) to 10 (reliable even under stress). Answer based on patterns, not best-case scenarios."}
+              </p>
+            </div>
+            {efClusters.map((cluster, ci) => (
+              <div key={ci} className="mb-8">
+                <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2" style={{ fontFamily: serif }}><span className="bg-neutral-200 text-neutral-500 text-xs px-2 py-1 rounded font-medium" style={{ fontFamily: sans }}>Cluster {ci + 1}</span>{cluster.name}</h3>
+                {cluster.capacities.map((cap) => {
+                  const Icon = capacityIcons[cap.id];
+                  return (
+                    <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-4">
+                      <div className="flex items-start gap-4 mb-4"><div className="bg-neutral-100 p-2 rounded-lg"><Icon className="w-6 h-6 text-neutral-600" /></div><div><h4 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h4><p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{isParentProxy ? cap.question.replace(/^I /,'My child ').replace(/^I'/,"My child'") : cap.question}</p></div></div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-neutral-500 w-24" style={{ fontFamily: sans }}>{cap.lowLabel}</span>
+                        <div className="flex-1 flex gap-1">{[1,2,3,4,5,6,7,8,9,10].map(n => (<button key={n} onClick={() => handleCapacityRating(cap.id, n)} className={`flex-1 py-2 text-sm rounded transition-colors ${capacityRatings[cap.id] === n ? 'bg-neutral-900 text-white' : capacityRatings[cap.id] > n ? 'bg-neutral-200 text-neutral-700' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`} style={{ fontFamily: sans }}>{n}</button>))}</div>
+                        <span className="text-xs text-neutral-500 w-24 text-right" style={{ fontFamily: sans }}>{cap.highLabel}</span>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-              <div className="sticky bottom-4 bg-white border border-neutral-200 rounded-xl p-4 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{Object.keys(capacityRatings).length} of {allCapacities.length} rated</p>
-                  <button onClick={() => setDiagnosticStep(2)} disabled={!isStep1Complete} className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 text-sm ${isStep1Complete ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'}`} style={{ fontFamily: sans }}>Continue <ChevronRight className="w-4 h-4" /></button>
-                </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <div className="sticky bottom-4 bg-white border border-neutral-200 rounded-xl p-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-neutral-600 text-sm" style={{ fontFamily: sans }}>{Object.keys(capacityRatings).length} of {allCapacities.length} rated</p>
+                <button onClick={() => setDiagnosticStep(2)} disabled={!isStep1Complete} className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 text-sm ${isStep1Complete ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'}`} style={{ fontFamily: sans }}>Continue <ChevronRight className="w-4 h-4" /></button>
               </div>
             </div>
-          )}
-          {diagnosticStep === 2 && (
-            <div>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8"><p className="text-amber-900 text-sm" style={{ fontFamily: sans }}><strong>Your 3 Weakest Capacities:</strong> Based on your ratings, we'll now check which support interventions you've already tried.</p></div>
-              {weakest.map((cap) => {
-                const capInt = interventions[cap.id]; const Icon = capacityIcons[cap.id];
-                return (
-                  <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-                    <div className="flex items-center gap-4 mb-6"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-lg text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h3><p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>Your rating: <span className="text-red-600 font-semibold">{capacityRatings[cap.id]}/10</span></p></div></div>
-                    {['training', 'environment', 'accountability'].map(lever => (
-                      <div key={lever} className="mb-4">
-                        <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-2 flex items-center gap-2" style={{ fontFamily: sans }}>
-                          {lever === 'training' && <Brain className="w-3.5 h-3.5" />}{lever === 'environment' && <Target className="w-3.5 h-3.5" />}{lever === 'accountability' && <Users className="w-3.5 h-3.5" />}
-                          {lever.charAt(0).toUpperCase() + lever.slice(1)} Interventions
-                        </h4>
-                        <div className="space-y-2">{capInt[lever].map(int => (
-                          <label key={int.id} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg cursor-pointer hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200">
-                            <input type="checkbox" checked={interventionStatus[int.id] || false} onChange={() => handleInterventionToggle(int.id)} className="w-5 h-5 rounded border-neutral-300 accent-neutral-900" />
-                            <span className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{int.text}</span>
-                          </label>
-                        ))}</div>
-                      </div>
-                    ))}
+          </div>
+        )}
+        {diagnosticStep === 2 && (
+          <div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8"><p className="text-amber-900 text-sm" style={{ fontFamily: sans }}><strong>{isParentProxy ? "Your Child's" : "Your"} 3 Weakest Capacities:</strong> Based on {isParentProxy ? "your" : "the"} ratings, we'll now check which support interventions {isParentProxy ? "your child has" : "you've"} already tried.</p></div>
+            {weakest.map((cap) => {
+              const capInt = interventions[cap.id]; const Icon = capacityIcons[cap.id];
+              return (
+                <div key={cap.id} className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
+                  <div className="flex items-center gap-4 mb-6"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-lg text-neutral-900" style={{ fontFamily: serif }}>{cap.name}</h3><p className="text-neutral-500 text-sm" style={{ fontFamily: sans }}>Your rating: <span className="text-red-600 font-semibold">{capacityRatings[cap.id]}/10</span></p></div></div>
+                  {['training', 'environment', 'accountability'].map(lever => (
+                    <div key={lever} className="mb-4">
+                      <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-2 flex items-center gap-2" style={{ fontFamily: sans }}>
+                        {lever === 'training' && <Brain className="w-3.5 h-3.5" />}{lever === 'environment' && <Target className="w-3.5 h-3.5" />}{lever === 'accountability' && <Users className="w-3.5 h-3.5" />}
+                        {lever.charAt(0).toUpperCase() + lever.slice(1)} Interventions
+                      </h4>
+                      <div className="space-y-2">{capInt[lever].map(int => (
+                        <label key={int.id} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg cursor-pointer hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200">
+                          <input type="checkbox" checked={interventionStatus[int.id] || false} onChange={() => handleInterventionToggle(int.id)} className="w-5 h-5 rounded border-neutral-300 accent-neutral-900" />
+                          <span className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{isParentProxy ? int.text.replace(/^I /,'My child ').replace(/^I'/,"My child'").replace(/^I've/,"My child has") : int.text}</span>
+                        </label>
+                      ))}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+            <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
+              <h3 className="font-semibold text-neutral-900 mb-4" style={{ fontFamily: serif }}>Get {isParentProxy ? "Your Child's" : "Your"} Results</h3>
+              {isParentProxy ? (
+                <div className="space-y-4 mb-4">
+                  <div>
+                    <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Student's Name</label>
+                    <input type="text" placeholder="Your child's name" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
                   </div>
-                );
-              })}
-              <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold text-neutral-900 mb-4" style={{ fontFamily: serif }}>Get Your Results</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Your Name (Parent)</label>
+                      <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1 block" style={{ fontFamily: sans }}>Your Email (Parent)</label>
+                      <input type="email" placeholder="Your email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
                   <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
                 </div>
-                <p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>We'll send you a detailed PDF report and save your results.</p>
+              )}
+              <p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>{isParentProxy ? "We'll send you a detailed PDF report of your child's results." : "We'll send you a detailed PDF report and save your results."}</p>
+            </div>
+            <div className="flex gap-4">
+              <button onClick={() => setDiagnosticStep(1)} className="px-6 py-3 border border-neutral-300 rounded-lg font-medium text-neutral-700 hover:bg-neutral-50 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4 inline mr-2" />Back</button>
+              <button onClick={handleViewResults} className="flex-1 bg-neutral-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>See {isParentProxy ? "the" : "My"} Results →</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════════════════════
+function Results() {
+  const ctx = useContext(AppContext);
+  const { calculateResults, fillingFor, studentName, name, handleDownloadPDF, pdfDownloaded, setCurrentView, setDiagnosticStep, setCapacityRatings, setInterventionStatus, setPdfDownloaded, setResultsSubmitted, setFillingFor, setParentEmail, setStudentName, setName, setEmail, capacityRatings } = ctx;
+  const results = calculateResults();
+  const leverLabels = { training: { label: "Training", icon: Brain }, environment: { label: "Environment", icon: Target }, accountability: { label: "Accountability", icon: Users } };
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      <div className="bg-neutral-950 text-white py-12 border-b border-neutral-800">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-6"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Your Results</span></div>
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm mb-6" style={{ fontFamily: sans }}><Check className="w-4 h-4" /> Diagnostic Complete</div>
+          <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: serif }}>{(fillingFor === 'child' ? studentName : name) ? `${fillingFor === 'child' ? studentName : name}, here's ${fillingFor === 'child' ? 'the' : 'your'}` : "Here's the"} Execution Profile</h1>
+          <p className="text-neutral-400" style={{ fontFamily: sans }}>We've identified your primary bottlenecks and the support levers you're missing.</p>
+        </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Download PDF button */}
+        <div className="flex justify-end mb-4">
+          <button onClick={handleDownloadPDF} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pdfDownloaded ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50'}`} style={{ fontFamily: sans }}>
+            {pdfDownloaded ? <><Check className="w-4 h-4" /> PDF Downloaded</> : <><Download className="w-4 h-4" /> Download PDF Report</>}
+          </button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-neutral-200 p-6 mb-6">
+          <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2" style={{ fontFamily: serif }}><AlertCircle className="w-6 h-6 text-red-500" />Your Primary Bottlenecks</h2>
+          {results.weakest.map((result, i) => {
+            const Icon = capacityIcons[result.capacity.id]; const MissingIcon = leverLabels[result.missingLever].icon;
+            return (
+              <div key={i} className="border-b border-neutral-100 last:border-0 py-6 first:pt-0 last:pb-0">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{result.capacity.name}</h3><p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>Rating: {result.rating}/10</p></div></div>
+                  <div className="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2" style={{ fontFamily: sans }}><MissingIcon className="w-3.5 h-3.5" />Missing: {leverLabels[result.missingLever].label}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {Object.entries(result.percentages).map(([lever, pct]) => (
+                    <div key={lever} className="text-center">
+                      <div className="text-xs text-neutral-500 mb-1" style={{ fontFamily: sans }}>{leverLabels[lever].label}</div>
+                      <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${lever === result.missingLever ? 'bg-red-400' : 'bg-emerald-400'}`} style={{ width: `${pct * 100}%` }} /></div>
+                      <div className="text-xs text-neutral-400 mt-1" style={{ fontFamily: sans }}>{result.implemented[lever]}/{result.total[lever]} implemented</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-4">
-                <button onClick={() => setDiagnosticStep(1)} className="px-6 py-3 border border-neutral-300 rounded-lg font-medium text-neutral-700 hover:bg-neutral-50 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4 inline mr-2" />Back</button>
-                <button onClick={handleViewResults} className="flex-1 bg-neutral-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>See My Results →</button>
+            );
+          })}
+        </div>
+
+        <div className={`rounded-2xl p-6 mb-6 ${results.recommendation === 'full_system' ? 'bg-neutral-950 text-white' : 'bg-white border border-neutral-200'}`}>
+          <h2 className={`text-xl font-bold mb-4 ${results.recommendation === 'full_system' ? 'text-white' : 'text-neutral-900'}`} style={{ fontFamily: serif }}>Our Recommendation</h2>
+          {results.recommendation === 'full_system' ? (
+            <div>
+              <p className="text-neutral-300 mb-4 text-sm" style={{ fontFamily: sans }}>Based on your results, you have <strong className="text-white">accountability gaps across multiple capacities</strong>. The Full Execution System (Tier 2) is designed for exactly this pattern.</p>
+              <div className="bg-white/5 border border-neutral-800 rounded-xl p-4 mb-4">
+                <div className="font-semibold mb-2 text-sm" style={{ fontFamily: sans }}>The Full Execution System includes:</div>
+                <ul className="space-y-2 text-sm text-neutral-300">
+                  {["Weekly 1:1 accountability coach", "Dedicated EA for daily planning calls", "Daily structure & time-blocking", "Formalized failure-mode diagnostics", "Monthly progress reporting"].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2" style={{ fontFamily: sans }}><Check className="w-4 h-4 text-amber-400/70" /> {item}</li>
+                  ))}
+                </ul>
               </div>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 text-sm font-medium" style={{ fontFamily: sans }}><ShieldCheck className="w-4 h-4 text-emerald-400" /><span className="text-emerald-300">30-Day "Do the Work or Don't Pay" Guarantee</span></div>
+              </div>
+              <button onClick={openCalendly} className="w-full bg-white text-neutral-900 py-4 rounded-xl font-semibold hover:bg-neutral-100 transition-colors text-sm" style={{ fontFamily: sans }}>Schedule a Consultation →</button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-neutral-600 mb-4 text-sm" style={{ fontFamily: sans }}>Your pattern suggests you may benefit from <strong className="text-neutral-900">Coached Execution (Tier 1)</strong>, which focuses on the accountability lever without daily EA support.</p>
+              <button onClick={openCalendly} className="w-full bg-neutral-900 text-white py-4 rounded-xl font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>Schedule a Consultation →</button>
             </div>
           )}
         </div>
+
+        <div className="bg-neutral-100 border border-neutral-200 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-neutral-900 mb-4" style={{ fontFamily: serif }}>What Happens Next</h2>
+          <div className="space-y-4">
+            {[{ num: 1, text: "Schedule a free 30-minute diagnostic call" }, { num: 2, text: "We'll confirm your bottlenecks and assess fit" }, { num: 3, text: "If it's a match, we onboard you within 48 hours" }].map((step, i) => (
+              <div key={i} className="flex items-center gap-4"><div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold text-sm" style={{ fontFamily: sans }}>{step.num}</div><p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{step.text}</p></div>
+            ))}
+          </div>
+        </div>
+        <div className="text-center mt-8"><button onClick={() => { setCurrentView('landing'); setDiagnosticStep(1); setCapacityRatings({}); setInterventionStatus({}); setPdfDownloaded(false); setResultsSubmitted(false); setFillingFor(null); setParentEmail(''); setStudentName(''); setName(''); setEmail(''); }} className="text-neutral-500 hover:text-neutral-700 text-sm" style={{ fontFamily: sans }}>← Start Over</button></div>
       </div>
-    );
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  APP — state lives here, flows through context
+// ═══════════════════════════════════════════════════════════════
+export default function App() {
+  const [currentView, setCurrentView] = useState('landing');
+  // audience removed — landing page is universal
+  const [diagnosticStep, setDiagnosticStep] = useState(1);
+  const [capacityRatings, setCapacityRatings] = useState({});
+  const [interventionStatus, setInterventionStatus] = useState({});
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [playbookEmail, setPlaybookEmail] = useState('');
+  const [showPlaybookModal, setShowPlaybookModal] = useState(false);
+  const [playbookSubmitted, setPlaybookSubmitted] = useState(false);
+  const [playbookSubmitting, setPlaybookSubmitting] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [resultsSubmitted, setResultsSubmitted] = useState(false);
+  const [pdfDownloaded, setPdfDownloaded] = useState(false);
+  const [fillingFor, setFillingFor] = useState(null);
+  const [parentEmail, setParentEmail] = useState('');
+  const [studentName, setStudentName] = useState('');
+
+  const allCapacities = efClusters.flatMap(c => c.capacities);
+
+  const getWeakestCapacities = () => {
+    const sorted = Object.entries(capacityRatings).sort(([,a], [,b]) => a - b).slice(0, 3);
+    return sorted.map(([id]) => allCapacities.find(c => c.id === id));
   };
 
-  // ═══════════════════════════════════════════════════════════════
-  //  RESULTS
-  // ═══════════════════════════════════════════════════════════════
-  const Results = () => {
+  const calculateResults = () => {
+    const weakest = getWeakestCapacities();
+    const results = weakest.map(cap => {
+      const capInt = interventions[cap.id];
+      const implemented = { training: capInt.training.filter(i => interventionStatus[i.id]).length, environment: capInt.environment.filter(i => interventionStatus[i.id]).length, accountability: capInt.accountability.filter(i => interventionStatus[i.id]).length };
+      const total = { training: capInt.training.length, environment: capInt.environment.length, accountability: capInt.accountability.length };
+      const percentages = { training: implemented.training / total.training, environment: implemented.environment / total.environment, accountability: implemented.accountability / total.accountability };
+      const lowestLever = Object.entries(percentages).sort(([,a], [,b]) => a - b)[0][0];
+      return { capacity: cap, rating: capacityRatings[cap.id], implemented, total, percentages, missingLever: lowestLever };
+    });
+    const accountabilityGaps = results.filter(r => r.missingLever === 'accountability').length;
+    const environmentGaps = results.filter(r => r.missingLever === 'environment').length;
+    let recommendation = 'full_system';
+    if (environmentGaps >= 2 && accountabilityGaps === 0) recommendation = 'coach_only';
+    return { weakest: results, recommendation };
+  };
+
+  const handleCapacityRating = (id, value) => setCapacityRatings(prev => ({ ...prev, [id]: value }));
+  const handleInterventionToggle = (id) => setInterventionStatus(prev => ({ ...prev, [id]: !prev[id] }));
+  const isStep1Complete = Object.keys(capacityRatings).length === allCapacities.length;
+
+  const handlePlaybookSubmit = async () => {
+    if (!playbookEmail || !playbookEmail.includes('@')) return;
+    setPlaybookSubmitting(true);
+    await Promise.all([
+      submitPlaybookEmail(playbookEmail),
+      submitToMailchimp({ email: playbookEmail, type: 'playbook' }),
+    ]);
+    setPlaybookSubmitting(false);
+    setPlaybookSubmitted(true);
+  };
+
+  const handleViewResults = async () => {
+    setCurrentView('results');
     const results = calculateResults();
-    const leverLabels = { training: { label: "Training", icon: Brain }, environment: { label: "Environment", icon: Target }, accountability: { label: "Accountability", icon: Users } };
-    return (
-      <div className="min-h-screen bg-neutral-50">
-        <div className="bg-neutral-950 text-white py-12 border-b border-neutral-800">
-          <div className="max-w-3xl mx-auto px-6 text-center">
-            <div className="flex items-center justify-center gap-3 mb-6"><span className="text-white text-sm font-semibold" style={{ fontFamily: serif }}>Whetstone</span><span className="text-neutral-700">|</span><span className="text-neutral-500 text-xs" style={{ fontFamily: sans }}>Your Results</span></div>
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm mb-6" style={{ fontFamily: sans }}><Check className="w-4 h-4" /> Diagnostic Complete</div>
-            <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: serif }}>{name ? `${name}, here's your` : "Here's your"} Execution Profile</h1>
-            <p className="text-neutral-400" style={{ fontFamily: sans }}>We've identified your primary bottlenecks and the support levers you're missing.</p>
-          </div>
-        </div>
-        <div className="max-w-3xl mx-auto px-6 py-8">
-          {/* Download PDF button */}
-          <div className="flex justify-end mb-4">
-            <button onClick={handleDownloadPDF} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pdfDownloaded ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50'}`} style={{ fontFamily: sans }}>
-              {pdfDownloaded ? <><Check className="w-4 h-4" /> PDF Downloaded</> : <><Download className="w-4 h-4" /> Download PDF Report</>}
-            </button>
-          </div>
+    const contactEmail = fillingFor === 'child' ? parentEmail : email;
+    const contactName = fillingFor === 'child' ? name : name;
+    if (contactEmail) {
+      Promise.all([
+        submitDiagnosticResults({
+          name: fillingFor === 'child' ? studentName : name,
+          email: contactEmail,
+          capacityRatings,
+          recommendation: results.recommendation,
+          weakestCapacities: results.weakest.map(r => r.capacity.name),
+          missingLevers: results.weakest.map(r => r.missingLever),
+          fillingFor: fillingFor || 'self',
+          parentEmail: fillingFor === 'child' ? parentEmail : '',
+          studentName: fillingFor === 'child' ? studentName : '',
+        }),
+        submitToMailchimp({ email: contactEmail, name: contactName, type: 'diagnostic' }),
+      ]);
+      setResultsSubmitted(true);
+    }
+  };
 
-          <div className="bg-white rounded-2xl border border-neutral-200 p-6 mb-6">
-            <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2" style={{ fontFamily: serif }}><AlertCircle className="w-6 h-6 text-red-500" />Your Primary Bottlenecks</h2>
-            {results.weakest.map((result, i) => {
-              const Icon = capacityIcons[result.capacity.id]; const MissingIcon = leverLabels[result.missingLever].icon;
-              return (
-                <div key={i} className="border-b border-neutral-100 last:border-0 py-6 first:pt-0 last:pb-0">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3"><div className="bg-red-50 p-2 rounded-lg border border-red-100"><Icon className="w-6 h-6 text-red-600" /></div><div><h3 className="font-semibold text-neutral-900" style={{ fontFamily: serif }}>{result.capacity.name}</h3><p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>Rating: {result.rating}/10</p></div></div>
-                    <div className="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2" style={{ fontFamily: sans }}><MissingIcon className="w-3.5 h-3.5" />Missing: {leverLabels[result.missingLever].label}</div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {Object.entries(result.percentages).map(([lever, pct]) => (
-                      <div key={lever} className="text-center">
-                        <div className="text-xs text-neutral-500 mb-1" style={{ fontFamily: sans }}>{leverLabels[lever].label}</div>
-                        <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${lever === result.missingLever ? 'bg-red-400' : 'bg-emerald-400'}`} style={{ width: `${pct * 100}%` }} /></div>
-                        <div className="text-xs text-neutral-400 mt-1" style={{ fontFamily: sans }}>{result.implemented[lever]}/{result.total[lever]} implemented</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+  const handleDownloadPDF = () => {
+    const results = calculateResults();
+    const reportName = fillingFor === 'child' ? studentName : name;
+    downloadDiagnosticPDF({
+      name: reportName, capacityRatings,
+      results: results.weakest,
+      recommendation: results.recommendation,
+      allCapacities,
+    });
+    setPdfDownloaded(true);
+  };
 
-          <div className={`rounded-2xl p-6 mb-6 ${results.recommendation === 'full_system' ? 'bg-neutral-950 text-white' : 'bg-white border border-neutral-200'}`}>
-            <h2 className={`text-xl font-bold mb-4 ${results.recommendation === 'full_system' ? 'text-white' : 'text-neutral-900'}`} style={{ fontFamily: serif }}>Our Recommendation</h2>
-            {results.recommendation === 'full_system' ? (
-              <div>
-                <p className="text-neutral-300 mb-4 text-sm" style={{ fontFamily: sans }}>Based on your results, you have <strong className="text-white">accountability gaps across multiple capacities</strong>. The Full Execution System (Tier 2) is designed for exactly this pattern.</p>
-                <div className="bg-white/5 border border-neutral-800 rounded-xl p-4 mb-4">
-                  <div className="font-semibold mb-2 text-sm" style={{ fontFamily: sans }}>The Full Execution System includes:</div>
-                  <ul className="space-y-2 text-sm text-neutral-300">
-                    {["Weekly 1:1 accountability coach", "Dedicated EA for daily planning calls", "Daily structure & time-blocking", "Formalized failure-mode diagnostics", "Monthly progress reporting"].map((item, i) => (
-                      <li key={i} className="flex items-center gap-2" style={{ fontFamily: sans }}><Check className="w-4 h-4 text-amber-400/70" /> {item}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6">
-                  <div className="flex items-center gap-2 text-sm font-medium" style={{ fontFamily: sans }}><ShieldCheck className="w-4 h-4 text-emerald-400" /><span className="text-emerald-300">30-Day "Do the Work or Don't Pay" Guarantee</span></div>
-                </div>
-                <button onClick={openCalendly} className="w-full bg-white text-neutral-900 py-4 rounded-xl font-semibold hover:bg-neutral-100 transition-colors text-sm" style={{ fontFamily: sans }}>Schedule a Consultation →</button>
-              </div>
-            ) : (
-              <div>
-                <p className="text-neutral-600 mb-4 text-sm" style={{ fontFamily: sans }}>Your pattern suggests you may benefit from <strong className="text-neutral-900">Coached Execution (Tier 1)</strong>, which focuses on the accountability lever without daily EA support.</p>
-                <button onClick={openCalendly} className="w-full bg-neutral-900 text-white py-4 rounded-xl font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>Schedule a Consultation →</button>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-neutral-100 border border-neutral-200 rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-neutral-900 mb-4" style={{ fontFamily: serif }}>What Happens Next</h2>
-            <div className="space-y-4">
-              {[{ num: 1, text: "Schedule a free 30-minute diagnostic call" }, { num: 2, text: "We'll confirm your bottlenecks and assess fit" }, { num: 3, text: "If it's a match, we onboard you within 48 hours" }].map((step, i) => (
-                <div key={i} className="flex items-center gap-4"><div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold text-sm" style={{ fontFamily: sans }}>{step.num}</div><p className="text-neutral-700 text-sm" style={{ fontFamily: sans }}>{step.text}</p></div>
-              ))}
-            </div>
-          </div>
-          <div className="text-center mt-8"><button onClick={() => { setCurrentView('landing'); setDiagnosticStep(1); setCapacityRatings({}); setInterventionStatus({}); setPdfDownloaded(false); setResultsSubmitted(false); }} className="text-neutral-500 hover:text-neutral-700 text-sm" style={{ fontFamily: sans }}>← Start Over</button></div>
-        </div>
-      </div>
-    );
+  const ctx = {
+    currentView, setCurrentView, diagnosticStep, setDiagnosticStep,
+    capacityRatings, setCapacityRatings, interventionStatus, setInterventionStatus,
+    name, setName, email, setEmail, playbookEmail, setPlaybookEmail,
+    showPlaybookModal, setShowPlaybookModal, playbookSubmitted, setPlaybookSubmitted,
+    playbookSubmitting, openFaq, setOpenFaq, resultsSubmitted, setResultsSubmitted,
+    pdfDownloaded, setPdfDownloaded, fillingFor, setFillingFor, parentEmail, setParentEmail,
+    studentName, setStudentName, allCapacities, getWeakestCapacities, calculateResults,
+    handleCapacityRating, handleInterventionToggle, isStep1Complete,
+    handlePlaybookSubmit, handleViewResults, handleDownloadPDF,
   };
 
   return (
-    <div>
+    <AppContext.Provider value={ctx}>
       {currentView === 'landing' && <LandingPage />}
       {currentView === 'diagnostic' && <Diagnostic />}
       {currentView === 'results' && <Results />}
-    </div>
+    </AppContext.Provider>
   );
 }
