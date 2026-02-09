@@ -48,9 +48,6 @@ export default async function handler(req, res) {
     const putBody = {
       email_address: email.toLowerCase(),
       status_if_new: 'subscribed',
-      merge_fields: {
-        FNAME: name || '',
-      },
     };
 
     console.log(`[Mailchimp] PUT ${memberUrl}`);
