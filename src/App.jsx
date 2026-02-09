@@ -754,7 +754,7 @@ function Diagnostic() {
 // ═══════════════════════════════════════════════════════════════
 function Results() {
   const ctx = useContext(AppContext);
-  const { calculateResults, fillingFor, studentName, name, handleDownloadPDF, pdfDownloaded, setCurrentView, setDiagnosticStep, setCapacityRatings, setInterventionStatus, setPdfDownloaded, setResultsSubmitted, setFillingFor, setParentEmail, setStudentName, setName, setEmail, capacityRatings } = ctx;
+  const { calculateResults, fillingFor, studentName, name, handleDownloadPDF, pdfDownloaded, pdfGenerating, setCurrentView, setDiagnosticStep, setCapacityRatings, setInterventionStatus, setPdfDownloaded, setResultsSubmitted, setFillingFor, setParentEmail, setStudentName, setName, setEmail, capacityRatings } = ctx;
   const results = calculateResults();
   const leverLabels = { training: { label: "Training", icon: Brain }, environment: { label: "Environment", icon: Target }, accountability: { label: "Accountability", icon: Users } };
   return (
@@ -770,8 +770,8 @@ function Results() {
       <div className="max-w-3xl mx-auto px-6 py-8">
         {/* Download PDF button */}
         <div className="flex justify-end mb-4">
-          <button onClick={handleDownloadPDF} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pdfDownloaded ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50'}`} style={{ fontFamily: sans }}>
-            {pdfDownloaded ? <><Check className="w-4 h-4" /> PDF Downloaded</> : <><Download className="w-4 h-4" /> Download PDF Report</>}
+          <button onClick={handleDownloadPDF} disabled={pdfGenerating} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pdfDownloaded ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : pdfGenerating ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-wait' : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50'}`} style={{ fontFamily: sans }}>
+            {pdfGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating PDF...</> : pdfDownloaded ? <><Check className="w-4 h-4" /> PDF Downloaded</> : <><Download className="w-4 h-4" /> Download PDF Report</>}
           </button>
         </div>
 
@@ -857,6 +857,7 @@ export default function App() {
   const [openFaq, setOpenFaq] = useState(null);
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
   const [pdfDownloaded, setPdfDownloaded] = useState(false);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const [fillingFor, setFillingFor] = useState(null);
   const [parentEmail, setParentEmail] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -925,17 +926,28 @@ export default function App() {
   };
 
   const handleDownloadPDF = () => {
-    const results = calculateResults();
-    const reportName = fillingFor === 'child' ? studentName : name;
-    downloadDiagnosticPDF({
-      name: reportName, capacityRatings,
-      results: results.weakest,
-      recommendation: results.recommendation,
-      allCapacities,
-      interventionStatus,
-      interventions,
-    });
-    setPdfDownloaded(true);
+    setPdfGenerating(true);
+    // Small delay to let the UI update before heavy PDF work
+    setTimeout(() => {
+      try {
+        const results = calculateResults();
+        const reportName = fillingFor === 'child' ? studentName : name;
+        const success = downloadDiagnosticPDF({
+          name: reportName, capacityRatings,
+          results: results.weakest,
+          recommendation: results.recommendation,
+          allCapacities,
+          interventionStatus,
+          interventions,
+        });
+        if (success !== false) setPdfDownloaded(true);
+      } catch (err) {
+        console.error('handleDownloadPDF error:', err);
+        alert('PDF error: ' + err.message + '\n\nPlease try again or contact hello@whetstoneadmissions.com');
+      } finally {
+        setPdfGenerating(false);
+      }
+    }, 100);
   };
 
   const ctx = {
@@ -947,7 +959,7 @@ export default function App() {
     pdfDownloaded, setPdfDownloaded, fillingFor, setFillingFor, parentEmail, setParentEmail,
     studentName, setStudentName, allCapacities, getWeakestCapacities, calculateResults,
     handleCapacityRating, handleInterventionToggle, isStep1Complete,
-    handlePlaybookSubmit, handleViewResults, handleDownloadPDF,
+    handlePlaybookSubmit, handleViewResults, handleDownloadPDF, pdfGenerating,
   };
 
   return (
