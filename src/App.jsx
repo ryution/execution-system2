@@ -932,6 +932,8 @@ export default function App() {
       results: results.weakest,
       recommendation: results.recommendation,
       allCapacities,
+      interventionStatus,
+      interventions,
     });
     setPdfDownloaded(true);
   };
