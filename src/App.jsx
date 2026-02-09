@@ -736,11 +736,14 @@ function Diagnostic() {
                   <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 outline-none text-sm" style={{ fontFamily: sans }} />
                 </div>
               )}
-              <p className="text-sm text-neutral-500" style={{ fontFamily: sans }}>{isParentProxy ? "We'll send you a detailed PDF report of your child's results." : "We'll send you a detailed PDF report and save your results."}</p>
+              <p className="text-sm text-neutral-500 mb-2" style={{ fontFamily: sans }}>{isParentProxy ? "We'll send you a detailed PDF report of your child's results." : "We'll send you a detailed PDF report and save your results."}</p>
+              {!(isParentProxy ? parentEmail && parentEmail.includes('@') : email && email.includes('@')) && (
+                <p className="text-sm text-amber-600 flex items-center gap-1" style={{ fontFamily: sans }}><AlertCircle className="w-3.5 h-3.5" /> Email is required to view your results.</p>
+              )}
             </div>
             <div className="flex gap-4">
               <button onClick={() => setDiagnosticStep(1)} className="px-6 py-3 border border-neutral-300 rounded-lg font-medium text-neutral-700 hover:bg-neutral-50 text-sm" style={{ fontFamily: sans }}><ChevronLeft className="w-4 h-4 inline mr-2" />Back</button>
-              <button onClick={handleViewResults} className="flex-1 bg-neutral-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-neutral-800 transition-colors text-sm" style={{ fontFamily: sans }}>See {isParentProxy ? "the" : "My"} Results →</button>
+              <button onClick={handleViewResults} disabled={!(isParentProxy ? (parentEmail && parentEmail.includes('@') && studentName.trim()) : (email && email.includes('@')))} className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors text-sm ${(isParentProxy ? (parentEmail && parentEmail.includes('@') && studentName.trim()) : (email && email.includes('@'))) ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'}`} style={{ fontFamily: sans }}>See {isParentProxy ? "the" : "My"} Results →</button>
             </div>
           </div>
         )}

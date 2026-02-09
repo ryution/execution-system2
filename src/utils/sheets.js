@@ -87,11 +87,17 @@ export async function submitDiagnosticResults({ name, email, capacityRatings, re
  */
 export async function submitToMailchimp({ email, name, type }) {
   try {
+    console.log(`[Mailchimp] Submitting: ${email} (${type})`);
     const response = await fetch('/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, name: name || '', type }),
     });
+    const data = await response.json();
+    console.log(`[Mailchimp] Response (${response.status}):`, data);
+    if (!response.ok) {
+      console.error('[Mailchimp] Error details:', data);
+    }
     return response.ok;
   } catch (error) {
     console.error('[Mailchimp] Submission failed:', error);
