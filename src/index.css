@@ -7,3 +7,38 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Animation utilities used by the new landing page */
+.animate-in {
+  animation-fill-mode: both;
+}
+.fade-in {
+  animation-name: fade-in;
+}
+.slide-in-from-right-4 {
+  animation-name: slide-in-from-right;
+}
+.duration-500 {
+  animation-duration: 500ms;
+}
+.duration-700 {
+  animation-duration: 700ms;
+}
+
+/* Hide scrollbar on the demo tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-in-from-right {
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
