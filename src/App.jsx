@@ -532,12 +532,12 @@ function LandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 -z-10"></div>
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-12 gap-12 items-center">
           <div className="md:col-span-7">
-            <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-700 text-slate-300 text-xs font-semibold uppercase tracking-widest mb-8 bg-slate-900/50 backdrop-blur-sm">The Execution System v2</div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-700 text-slate-300 text-xs font-semibold uppercase tracking-widest mb-8 bg-slate-900/50 backdrop-blur-sm">FROM WHETSTONE</div>
             <h1 className="font-serif text-5xl md:text-7xl font-semibold tracking-tight mb-8 text-white leading-[1.05]">
               Ambition requires <br /><span className="italic text-slate-400 font-light">structure.</span>
             </h1>
             <p className="text-xl text-slate-300 mb-10 max-w-xl leading-relaxed font-light">
-              The definitive executive function framework for high-achieving students. Master your workload, eliminate procrastination, and execute flawlessly—without the burnout.
+            The definitive executive function framework for high-achieving students. Master your workload, end procrastination, and prevent burnout.
             </p>
             <div className="flex flex-col sm:flex-row items-start gap-4">
               <button onClick={() => setCurrentView('diagnostic')} className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 font-medium hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 group rounded-sm">
