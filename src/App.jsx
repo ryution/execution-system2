@@ -358,49 +358,112 @@ function LandingPage() {
           <button onClick={() => setCurrentView('diagnostic')} className="bg-white hover:bg-slate-200 text-slate-950 px-6 py-2.5 text-sm font-bold rounded-sm hidden sm:block">Free Diagnostic</button>
         </div>
       </nav>
+
       <div className="pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
+
+          {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h1 className="font-serif text-4xl md:text-6xl font-semibold text-white mb-6">Transparent Pricing. Elite Results.</h1>
-            <p className="text-lg text-slate-300 font-light">Choose the level of intervention that fits your student's current needs.</p>
+            <h1 className="font-serif text-4xl md:text-6xl font-semibold text-white mb-6">Service Tiers</h1>
+            <p className="text-lg text-slate-300 font-light">The diagnostic recommends which tier fits. Most multi-lever cases need Tier 2. We take a limited number of new clients each month.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+
+          {/* Two-Tier Pricing */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-20">
+            {/* Tier 1 */}
             <div className="bg-slate-900 border border-slate-800 rounded-sm p-8 flex flex-col">
-              <h3 className="font-serif text-2xl font-semibold text-white mb-2">The Diagnostic</h3>
-              <p className="text-slate-400 text-sm mb-6 font-light">A complete audit of executive function and academic load.</p>
-              <div className="text-4xl font-bold text-white mb-8">$495 <span className="text-lg text-slate-500 font-normal">/ one-time</span></div>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Tier 1</div>
+              <h3 className="font-serif text-2xl font-semibold text-white mb-2">Coached Execution</h3>
+              <p className="text-slate-400 text-sm mb-6 font-light">Single-lever deficits, primarily accountability</p>
+              <div className="text-4xl font-bold text-white mb-8">$750–900 <span className="text-lg text-slate-500 font-normal">/ month</span></div>
               <ul className="space-y-4 mb-8 flex-1 text-sm text-slate-300">
-                {["11-Capacity Executive Assessment", "90-Minute Strategy Session", "Custom Blueprint Generation", "Full PDF Report & Recommendations"].map((item, i) => (
-                  <li key={i} className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />{item}</li>
+                {["Weekly 1:1 accountability coach", "Commitment protocol", "Weekly execution review", "Failure-mode identification"].map((item, i) => (
+                  <li key={i} className="flex gap-3"><Check className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />{item}</li>
                 ))}
               </ul>
-              <button onClick={() => setCurrentView('diagnostic')} className="w-full py-3 bg-slate-800 text-white font-medium hover:bg-slate-700 transition-colors rounded-sm border border-slate-700">Book Diagnostic</button>
+              <button onClick={() => setCurrentView('diagnostic')} className="w-full py-3 bg-slate-800 text-white font-medium hover:bg-slate-700 transition-colors rounded-sm border border-slate-700">See If This Fits →</button>
             </div>
-            <div className="bg-slate-800 border border-amber-500/50 rounded-sm p-8 flex flex-col relative md:-translate-y-4">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-slate-950 text-xs font-bold uppercase tracking-widest px-4 py-1 rounded-sm">Most Popular</div>
-              <h3 className="font-serif text-2xl font-semibold text-white mb-2">Execution Coaching</h3>
-              <p className="text-slate-300 text-sm mb-6 font-light">Weekly 1-on-1 intervention to build the 3 keystone habits.</p>
-              <div className="text-4xl font-bold text-amber-500 mb-8">$1,200 <span className="text-lg text-slate-400 font-normal">/ month</span></div>
+
+            {/* Tier 2 — Flagship */}
+            <div className="bg-slate-800 border-2 border-amber-500/50 rounded-sm p-8 flex flex-col relative md:-translate-y-4 shadow-2xl">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-amber-500"></div>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Tier 2 · Flagship</div>
+              <h3 className="font-serif text-2xl font-semibold text-white mb-2">Full Execution System</h3>
+              <p className="text-slate-300 text-sm mb-4 font-light">Multi-lever deficits requiring daily structure</p>
+              <div className="text-4xl font-bold text-amber-500 mb-1">$1,500–2,000 <span className="text-lg text-slate-400 font-normal">/ month</span></div>
+              <p className="text-slate-500 text-xs mb-8">3-month minimum · 30-day guarantee</p>
               <ul className="space-y-4 mb-8 flex-1 text-sm text-white">
-                {["Everything in Diagnostic", "Weekly 60-min Strategy Meetings", "Receptacle & Algorithm Setup", "Extracurricular Mapping (Ikigai)", "Direct text/email accountability"].map((item, i) => (
-                  <li key={i} className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />{item}</li>
+                {[
+                  "Everything in Tier 1",
+                  "Dedicated Executive Assistant",
+                  "Daily structure & time-blocking",
+                  "EA friction removal & reminders",
+                  "Completion logging",
+                  "Monthly progress reporting",
+                  "Formalized failure diagnostics",
+                  "Full bonus package (Playbook, videos, reboot protocol)"
+                ].map((item, i) => (
+                  <li key={i} className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /><span className={i === 0 ? 'font-semibold' : ''}>{item}</span></li>
                 ))}
               </ul>
-              <button onClick={openCalendly} className="w-full py-3 bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors rounded-sm">Apply for Coaching</button>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-sm p-8 flex flex-col">
-              <h3 className="font-serif text-2xl font-semibold text-white mb-2">Full Integration</h3>
-              <p className="text-slate-400 text-sm mb-6 font-light">Comprehensive 11th/12th grade college application management.</p>
-              <div className="text-4xl font-bold text-white mb-8">Custom <span className="text-lg text-slate-500 font-normal">/ package</span></div>
-              <ul className="space-y-4 mb-8 flex-1 text-sm text-slate-300">
-                {["1-on-1 Execution Coaching included", "Common App Essay Ideation & Editing", "Supplement Writing Workshops", "College List Strategy"].map((item, i) => (
-                  <li key={i} className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />{item}</li>
-                ))}
-                <li className="flex gap-3"><Check className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />*Limited to 10 students per year</li>
-              </ul>
-              <button onClick={openCalendly} className="w-full py-3 bg-transparent border border-slate-600 text-white font-medium hover:bg-slate-800 transition-colors rounded-sm">Inquire Availability</button>
+              <button onClick={() => setCurrentView('diagnostic')} className="w-full py-3 bg-white text-slate-950 font-bold hover:bg-slate-200 transition-colors rounded-sm">Take the Diagnostic →</button>
             </div>
           </div>
+
+          {/* What This Replaces */}
+          <div className="max-w-4xl mx-auto mb-20">
+            <div className="text-center mb-10">
+              <h2 className="font-serif text-3xl font-semibold text-white mb-4">What This Replaces</h2>
+              <p className="text-slate-400 font-light">You may already be spending this much on tools and support that address symptoms, not structure.</p>
+            </div>
+            <div className="space-y-3">
+              {[
+                { item: "Executive function coach (1x/week)", cost: "$400–600/mo", note: "Included — plus formalized failure diagnostics" },
+                { item: "Private tutor (2x/week)", cost: "$600–1,200/mo", note: "Often unnecessary once execution improves" },
+                { item: "Productivity app subscriptions", cost: "$30–80/mo", note: "Apps fail without structure underneath" },
+                { item: "Time lost to panic-mode catch-up", cost: "Hours/week", note: "Replaced by daily EA planning calls" },
+              ].map((row, i) => (
+                <div key={i} className="bg-slate-900 border border-slate-800 rounded-sm px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium">{row.item}</p>
+                    <p className="text-slate-500 text-xs mt-0.5">{row.note}</p>
+                  </div>
+                  <span className="text-rose-400 font-semibold text-sm whitespace-nowrap">{row.cost}</span>
+                </div>
+              ))}
+              <div className="bg-slate-950 border border-amber-500/30 rounded-sm px-6 py-5 flex items-center justify-between gap-4 mt-4">
+                <div>
+                  <p className="text-white font-semibold">The Full Execution System</p>
+                  <p className="text-slate-400 text-xs">One integrated system replacing piecemeal interventions</p>
+                </div>
+                <span className="text-amber-500 font-bold text-lg whitespace-nowrap">$1,750<span className="text-sm text-slate-500 font-normal">/mo avg</span></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Guarantee */}
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-900/20 border border-emerald-500/30 text-emerald-400 rounded-full text-sm font-medium mb-6">
+                <ShieldCheck className="w-4 h-4" /> Our Guarantee
+              </div>
+              <h2 className="font-serif text-3xl md:text-4xl font-semibold text-white mb-4">Do the Work, or Don't Pay.</h2>
+              <p className="text-slate-400 font-light max-w-xl mx-auto">If you follow the system and execution doesn't improve within 30 days, we refund you.</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-sm p-8">
+              <p className="text-slate-300 text-sm mb-6"><strong className="text-white">Execution improvement</strong> means any two of the following within 30 days:</p>
+              <div className="grid sm:grid-cols-2 gap-3 mb-8">
+                {["Higher completion rate of declared commitments", "Smaller gap between planned and completed tasks", "On-time initiation of time-blocked work", "Fewer repeated misses without structural adjustment"].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3"><Check className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" /><span className="text-slate-300 text-sm">{item}</span></div>
+                ))}
+              </div>
+              <div className="border-t border-slate-800 pt-6">
+                <p className="text-slate-400 text-sm leading-relaxed"><strong className="text-slate-200">The logic:</strong> Execution improves when structure is followed. If you attend every session, follow the daily structure, respond to check-ins, and report honestly — and execution still doesn't improve — the system has failed, not you. We refund you. This is epistemic integrity, not customer service.</p>
+              </div>
+            </div>
+            <p className="text-center text-slate-600 text-xs mt-4">The guarantee covers structural execution metrics. It does not cover grades, admissions outcomes, motivation levels, or clinical symptoms.</p>
+          </div>
+
         </div>
       </div>
       {showPlaybookModal && <PlaybookModal />}
@@ -583,6 +646,59 @@ function LandingPage() {
           </div>
         </div>
       </section>
+      
+      {/* How The System Works — Human Infrastructure */}
+      <section className="py-24 md:py-32 bg-slate-950 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="font-serif text-4xl md:text-5xl font-semibold mb-4 text-white">The people behind the algorithm.</h2>
+            <p className="text-lg text-slate-400 font-light">You learn the system. They make sure you actually use it. Three layers of support — maximum drift: seven days.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                num: "01",
+                title: "Weekly Accountability Coach",
+                desc: "45–60 minutes reviewing what worked, what broke, and why. Misses become data, not discouragement.",
+                tag: "Trained in EF diagnostics & failure-mode analysis",
+                color: "border-blue-500/30",
+                accent: "text-blue-400"
+              },
+              {
+                num: "02",
+                title: "Dedicated Executive Assistant",
+                desc: "10-minute daily call. Reviews your calendar, confirms start times, logs completions. Your schedule becomes real.",
+                tag: "Also handles reminders, logistics & friction removal",
+                color: "border-amber-500/30",
+                accent: "text-amber-500"
+              },
+              {
+                num: "03",
+                title: "Failure-Mode Diagnostics",
+                desc: "After weeks 3–4, a written analysis: pattern diagnosis, prescription map, and identification of sabotage points.",
+                tag: "Converts misses into data — prevents the spiral",
+                color: "border-emerald-500/30",
+                accent: "text-emerald-400"
+              },
+            ].map((item, i) => (
+              <div key={i} className={`bg-slate-900 border ${item.color} rounded-sm p-8`}>
+                <div className={`font-serif text-5xl font-bold ${item.accent} opacity-30 mb-4 select-none`}>{item.num}</div>
+                <h3 className="font-serif text-xl font-semibold text-white mb-3">{item.title}</h3>
+                <p className="text-slate-300 leading-relaxed text-sm mb-4">{item.desc}</p>
+                <p className="text-slate-500 text-xs italic border-t border-slate-800 pt-3">{item.tag}</p>
+              </div>
+            ))}
+          </div>
+          <div className="max-w-3xl mx-auto mt-12">
+            <div className="bg-slate-900 border border-slate-800 rounded-sm p-8">
+              <p className="font-serif text-lg text-slate-300 italic leading-relaxed">
+                "Even when every other system collapses, the weekly meeting ensures return. Without it, a bad week becomes a bad month. With it, maximum drift is seven days."
+              </p>
+              <p className="text-slate-600 text-sm mt-3">— The Execution System Playbook</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Interactive Demo */}
       <section id="demo" className="py-24 md:py-32 bg-slate-900 border-b border-slate-800">
@@ -731,26 +847,55 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 border border-amber-900/50 bg-amber-900/10 text-amber-500 text-xs font-semibold uppercase tracking-widest mb-8">Client Success</div>
-            <h2 className="font-serif text-3xl md:text-5xl font-semibold text-white mb-6">Transforming Executive Function</h2>
+            <h2 className="font-serif text-3xl md:text-5xl font-semibold text-white mb-4">Transforming Executive Function</h2>
+            <p className="text-slate-400 font-light">Composite scenarios drawn from real client patterns. Details changed for privacy.</p>
           </div>
           <div className="grid lg:grid-cols-3 gap-8">
             {[
-              { title: 'The "Smart but Scattered"', quote: '"He had a 1450 SAT but was drowning in APs. He would spend 6 hours at his desk but only accomplish 1 hour of actual work."', bottleneck: "Friction & Avoidance", intervention: "Timer 1: 5-Minute Brain Dump to bypass task initiation anxiety.", result: "Zero all-nighters. Straight A's restored.", lift: false },
-              { title: "The Perfectionist", quote: '"She couldn\'t start an essay until 11 PM the night before. If she didn\'t know exactly how the whole project would look, she would completely freeze."', bottleneck: "Procrastination Loops", intervention: "Timer 2: Chunking massive projects into micro-tasks via the Eisenhower Matrix.", result: "Drafts finished 3 days early. Reduced panic.", lift: true },
-              { title: "The Memory Reliant", quote: '"He swore he could keep track of his 3 clubs, varsity sports, and homework in his head. He constantly dropped the ball on minor assignments."', bottleneck: "Cognitive Overload", intervention: "Timer 3: Mandatory Calendar Sync and executing <2m tasks instantly.", result: "Reliable follow-through. Earned leadership roles.", lift: false },
+              {
+                title: 'The "Smart but Scattered"',
+                quote: '"He had a 1450 SAT but was drowning in APs. He would spend 6 hours at his desk but only accomplish 1 hour of actual work."',
+                bottleneck: "Friction & Avoidance",
+                intervention: "Daily EA calls + Brain Dump protocol bypassed task initiation anxiety entirely.",
+                result: "Task initiation: 2/10 → 7/10",
+                timeline: "6 weeks",
+                lift: false
+              },
+              {
+                title: "The Perfectionist",
+                quote: '"She couldn\'t start an essay until 11 PM the night before. If she didn\'t know exactly how the whole project would look, she would completely freeze."',
+                bottleneck: "Procrastination Loops",
+                intervention: "Weekly coach identified the pattern — overcommitment without time awareness. Eisenhower Matrix + load recalibration.",
+                result: "Commitment completion: ~40% → 85%",
+                timeline: "2 months",
+                lift: true
+              },
+              {
+                title: "The Parent Who Stopped Nagging",
+                quote: '"Every evening was the same argument about homework. The parent was functioning as the accountability system — and resenting it."',
+                bottleneck: "Relational Conflict",
+                intervention: "EA replaced the parent as the daily accountability layer. Monthly PDF reports replaced nightly arguments.",
+                result: "GPA up 0.6 pts; parent conflict eliminated",
+                timeline: "3 months",
+                lift: false
+              },
             ].map((s, i) => (
               <div key={i} className={`bg-slate-900 border border-slate-800 p-8 rounded-sm shadow-xl flex flex-col ${s.lift ? 'lg:-translate-y-4' : ''}`}>
                 <Quote className="w-8 h-8 text-slate-700 mb-6" />
                 <h3 className="font-serif text-xl font-semibold text-white mb-4">{s.title}</h3>
-                <p className="text-slate-300 text-sm leading-relaxed mb-8 italic flex-grow">{s.quote}</p>
+                <p className="text-slate-300 text-sm leading-relaxed mb-6 italic flex-grow">{s.quote}</p>
                 <div className="space-y-4 border-t border-slate-800 pt-6">
                   <div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">The Bottleneck</div><div className="text-white text-sm">{s.bottleneck}</div></div>
                   <div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">The Intervention</div><div className="text-white text-sm">{s.intervention}</div></div>
-                  <div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">The Result</div><div className="text-emerald-400 font-medium text-sm">{s.result}</div></div>
+                  <div className="bg-slate-950 border border-slate-700 rounded-sm p-4 flex items-center justify-between">
+                    <div><div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">The Result</div><div className="text-emerald-400 font-semibold text-sm">{s.result}</div></div>
+                    <div className="text-xs text-slate-500 font-medium border border-slate-700 px-2.5 py-1 rounded-full">{s.timeline}</div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+          <p className="text-center text-slate-600 text-xs mt-8">Composite scenarios based on multiple Tier 2 clients. Individual results vary.</p>
         </div>
       </section>
 
