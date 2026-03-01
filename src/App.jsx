@@ -528,29 +528,43 @@ function LandingPage() {
       </nav>
 
       {/* Hero */}
-      {/* Hero */}
       <section className="relative pt-40 pb-24 md:pt-52 md:pb-32 overflow-hidden border-b border-slate-800">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 -z-10"></div>
-        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-700 text-slate-300 text-xs font-semibold uppercase tracking-widest mb-8 bg-slate-900/50 backdrop-blur-sm">From Whetstone</div>
-          <h1 className="font-serif text-5xl md:text-7xl font-semibold tracking-tight mb-8 text-white leading-[1.05]">
-            Stop Trying Harder.<br /><span className="italic text-amber-500">Install Structure.</span>
-          </h1>
-          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-            We diagnose exactly where your execution breaks down, then install the support infrastructure that makes follow-through inevitable.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={() => setCurrentView('diagnostic')} className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 font-medium hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 group rounded-sm">
-              Take the Free Diagnostic <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button onClick={() => setShowPlaybookModal(true)} className="w-full sm:w-auto px-8 py-4 bg-transparent text-white font-medium border border-slate-700 hover:border-slate-500 hover:bg-slate-900/50 transition-colors flex items-center justify-center gap-2 rounded-sm">
-              <BookOpen className="w-4 h-4" /> Read the Playbook
-            </button>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-12 gap-12 items-center">
+          <div className="md:col-span-7">
+            <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-700 text-slate-300 text-xs font-semibold uppercase tracking-widest mb-8 bg-slate-900/50 backdrop-blur-sm">The Execution System v2</div>
+            <h1 className="font-serif text-5xl md:text-7xl font-semibold tracking-tight mb-8 text-white leading-[1.05]">
+              Ambition requires <br /><span className="italic text-slate-400 font-light">structure.</span>
+            </h1>
+            <p className="text-xl text-slate-300 mb-10 max-w-xl leading-relaxed font-light">
+              The definitive executive function framework for high-achieving students. Master your workload, eliminate procrastination, and execute flawlessly—without the burnout.
+            </p>
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <button onClick={() => setCurrentView('diagnostic')} className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 font-medium hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 group rounded-sm">
+                Start the Diagnostic <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-4 bg-transparent text-white font-medium border border-slate-700 hover:border-slate-500 hover:bg-slate-900/50 transition-colors flex items-center justify-center gap-2 rounded-sm">
+                Try the Algorithm
+              </button>
+            </div>
           </div>
-          <p className="text-slate-600 mt-5 text-sm">5 minutes · Personalized results · No spam</p>
+          <div className="md:col-span-5 relative hidden md:block">
+            <div className="absolute inset-0 bg-amber-900/20 translate-x-4 translate-y-4 border border-amber-900/30 z-0"></div>
+            <div className="bg-slate-900 border border-slate-700 p-8 relative z-10 shadow-2xl shadow-black/50">
+              <div className="border-b border-slate-700 pb-4 mb-6">
+                <h3 className="font-serif text-xl font-semibold text-white">The Receptacle</h3>
+                <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Planning Algorithm • Daily</p>
+              </div>
+              <ul className="space-y-4 text-sm text-slate-300">
+                <li className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /><div><span className="font-bold text-white">Timer 1 (5m):</span> Transfer old tasks & dump new ones.</div></li>
+                <li className="flex gap-3"><Check className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /><div><span className="font-bold text-white">Timer 2 (5m):</span> Chunk tasks & sort in Eisenhower Matrix.</div></li>
+                <li className="flex gap-3"><Check className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" /><div><span className="font-bold text-white">Timer 3 (5m):</span> Block in Calendar & do &lt;2m tasks.</div></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
-      
+
       {/* Philosophy */}
       <section className="py-24 md:py-32 bg-slate-950 border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-16 items-center">
