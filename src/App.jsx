@@ -533,8 +533,8 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-12 gap-12 items-center">
           <div className="md:col-span-7">
             <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-700 text-slate-300 text-xs font-semibold uppercase tracking-widest mb-8 bg-slate-900/50 backdrop-blur-sm">FROM WHETSTONE</div>
-            <h1 className="font-serif text-5xl md:text-7xl font-semibold tracking-tight mb-8 text-white leading-[1.05]">
-              Ambition requires <br /><span className="italic text-slate-400 font-light">structure.</span>
+            <h1 className="font-serif text-3xl md:text-5xl font-semibold tracking-tight mb-8 text-white leading-[1.05]">
+              Stop Trying Harder. <br /><span className="italic text-amber-500 font-light">Install Structure.</span>
             </h1>
             <p className="text-xl text-slate-300 mb-10 max-w-xl leading-relaxed font-light">
             The definitive executive function framework for high-achieving students. Master your workload, end procrastination, and prevent burnout.
